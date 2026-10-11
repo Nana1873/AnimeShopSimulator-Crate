@@ -48,29 +48,24 @@ namespace AnimeShopCrate
             if (!CrateRules.Allowed(def)) { Settings.Debug($"take refused: {def?.Type} does not go into the crate."); return false; }
             if (CrateStore.UsedSpace(owner) + CrateRules.SpaceOf(def) > CrateRules.Capacity) { Settings.Debug("take refused: crate full."); return false; }
 
-            Il2CppSystem.Guid id;
-            ProductTransferPayload payload;
+            // TryTakeItemByPlayerServer returns through out-parameters (a Guid struct among them),
+            // which crashes the game natively through the interop layer. Use the plain path the
+            // game's own box transfers use: read the top item, then remove it.
             var pricePlace = place.PricePlace;
             var box = place._pickupProducts;
-            if (box != null)
-            {
-                if (!box.IsOpened) return false;
-                id = place.Id;
-                payload = place.TryGetItem();
-                place.RemoveLastItemServer();
-            }
-            else if (pricePlace != null)
-            {
-                if (pricePlace.IsPlayerTakeBlocked) { Settings.Debug("take refused: slot reserved by an employee or buyer."); return false; }
-                Settings.Trace("host take: from shelf");
-                if (!pricePlace.TryTakeItemByPlayerServer(out id, out payload)) return false;
-                Settings.Trace("host take: removed from shelf");
-            }
-            else return false;
+            if (box != null && !box.IsOpened) return false;
+            if (box == null && pricePlace != null && pricePlace.IsPlayerTakeBlocked) { Settings.Debug("take refused: slot reserved by an employee or buyer."); return false; }
+            if (box == null && pricePlace == null) return false;
+            string id = Ids.ToText(place.Id);
+            Settings.Trace("host take: reading top item");
+            var payload = place.TryGetItem();
+            Settings.Trace("host take: removing");
+            place.RemoveLastItemServer();
+            Settings.Trace("host take: removed");
 
             CrateStore.Get(owner).Add(new CrateItem
             {
-                ProductId = Ids.ToText(id),
+                ProductId = id,
                 DefinitionId = def.Id,
                 VariantDefinitionId = payload?.VariantDefinitionId ?? 0,
                 VariantKeychainFoil = payload?.VariantKeychainFoil ?? 0,
