@@ -231,6 +231,8 @@ namespace AnimeShopCrate
 
         internal static void Say(string text)
         {
+            // The game's own warning; the plain overlay only if the HUD is not available.
+            if (GameUi.Warn(text)) return;
             Hint = text;
             HintUntil = Time.time + 2.5f;
         }

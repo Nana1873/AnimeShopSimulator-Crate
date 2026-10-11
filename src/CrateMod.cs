@@ -24,6 +24,8 @@ namespace AnimeShopCrate
             CrateSave.Update();
             CrateMode.Update();
             CrateInput.Update();
+            GamePrompts.Update();
+            GameUi.UpdatePanel();
         }
 
         public override void OnGUI()
@@ -41,6 +43,8 @@ namespace AnimeShopCrate
             DropKey.Reset();
             CratePlacement.Reset();
             CrateOutline.Reset();
+            GamePrompts.Reset();
+            GameUi.Reset();
         }
     }
 }

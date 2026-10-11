@@ -25,6 +25,7 @@
     <Reference Include="$(Il2Cpp)\Il2CppPieMenu.dll" Private="false" />
     <Reference Include="$(Il2Cpp)\Il2CppRewired_Core.dll" Private="false" />
     <Reference Include="$(Il2Cpp)\Il2CppOutlinable.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\Il2CppI2.dll" Private="false" />
     <Reference Include="$(Il2Cpp)\Il2CppUniTask.dll" Private="false" Condition="Exists('$(Il2Cpp)\Il2CppUniTask.dll')" />
     <Reference Include="$(Il2Cpp)\Unity.TextMeshPro.dll" Private="false" Condition="Exists('$(Il2Cpp)\Unity.TextMeshPro.dll')" />
     <Reference Include="$(Il2Cpp)\UnityEngine.CoreModule.dll" Private="false" />

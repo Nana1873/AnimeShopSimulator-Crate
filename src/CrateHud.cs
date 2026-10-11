@@ -2,101 +2,23 @@ using UnityEngine;
 
 namespace AnimeShopCrate
 {
-    /// <summary>Simple on-screen list of the local crate's contents while it is held.</summary>
+    /// <summary>
+    /// Fallback overlay for hints when the game's warning widget is not available. Prompts, the crate
+    /// panel and warnings normally use the game's own UI (see <see cref="GamePrompts"/>, <see cref="GameUi"/>).
+    /// </summary>
     internal static class CrateHud
     {
-        private static GUIStyle _box, _line, _selected, _hint, _right, _center, _prompt;
+        private static GUIStyle _center;
 
         internal static void Draw()
         {
-            var player = Game.LocalPlayer;
-            if (player == null) return;
-            if (!CrateMode.IsLocalActive)
+            if (CrateInput.Hint == null || Time.time >= CrateInput.HintUntil) return;
+            if (_center == null)
             {
-                if (CrateInput.AimedWorldCrate != 0)
-                {
-                    Styles();
-                    int n = WorldCrates.ItemCount(CrateInput.AimedWorldCrate);
-                    ulong owner = WorldCrates.OwnerOf(CrateInput.AimedWorldCrate);
-                    string text = owner != 0 && owner != player.SteamId
-                        ? $"Kiste von einem Mitspieler ({n} {(n == 1 ? "Produkt" : "Produkte")})"
-                        : $"[{DropKey.Label}] Kiste aufheben ({n} {(n == 1 ? "Produkt" : "Produkte")})";
-                    GUI.Label(new Rect(Screen.width / 2f - 300, Screen.height * 0.56f, 600, 30), text, _center);
-                }
-                DrawHint();
-                return;
+                _center = new GUIStyle(GUI.skin.label) { fontSize = 18, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
+                _center.normal.textColor = new Color(1f, 0.85f, 0.45f);
             }
-            Styles();
-            if (CratePlacement.Active) DrawPlacementPrompts();
-
-            var groups = CrateInput.Groups();
-            int used = CrateStore.UsedSpace(player.SteamId);
-            float lineH = 24f, w = 400f;
-            float h = 40f + lineH * Mathf.Max(1, groups.Count) + 46f;
-            // Left side, below the level/cleanliness bars: the game's key prompts live on the right.
-            float x = 24f, y = Screen.height * 0.22f;
-
-            GUI.Box(new Rect(x, y, w, h), "", _box);
-            int count = 0;
-            foreach (var g in groups) count += g.count;
-            GUI.Label(new Rect(x + 12, y + 8, w - 24, lineH), $"Kiste: {count} {(count == 1 ? "Produkt" : "Produkte")} · Platz {used}/{CrateRules.Capacity}", _line);
-            float ly = y + 36;
-            if (groups.Count == 0) GUI.Label(new Rect(x + 12, ly, w - 24, lineH), "leer – Rechtsklick auf ein Regalfach", _line);
-            for (int i = 0; i < groups.Count; i++)
-            {
-                bool sel = i == CrateInput.Selected;
-                string name = CrateRules.Name(groups[i].item.DefinitionId);
-                int space = CrateRules.SpaceOf(groups[i].item.DefinitionId) * groups[i].count;
-                var row = new Rect(x + 12, ly + i * lineH, w - 24, lineH);
-                GUI.Label(new Rect(row.x, row.y, row.width - 64, row.height), $"{(sel ? "▶ " : "   ")}{groups[i].count}× {name}", sel ? _selected : _line);
-                GUI.Label(row, $"{space} Platz", _right);
-            }
-            GUI.Label(new Rect(x + 12, y + h - 44, w - 24, 20), "LMB einräumen · RMB nehmen · Mausrad wählen", _hint);
-            GUI.Label(new Rect(x + 12, y + h - 24, w - 24, 20), $"{DropKey.Label} abstellen · 6 wegpacken", _hint);
-            DrawHint();
-        }
-
-        // Same spot and order as the game's prompts for placing a box.
-        private static void DrawPlacementPrompts()
-        {
-            float w = 170f, h = 34f, x = Screen.width - w - 40f, y = Screen.height * 0.44f;
-            string[] lines = { "LMB  Platzieren", "RMB  Abbrechen", "Mausrad  Drehen" };
-            for (int i = 0; i < lines.Length; i++)
-            {
-                var r = new Rect(x, y + i * (h + 8f), w, h);
-                GUI.Box(r, "", _box);
-                GUI.Label(new Rect(r.x + 10, r.y, r.width - 20, r.height), lines[i], _prompt);
-            }
-        }
-
-        private static void DrawHint()
-        {
-            if (CrateInput.Hint != null && Time.time < CrateInput.HintUntil)
-            {
-                Styles();
-                GUI.Label(new Rect(Screen.width / 2f - 300, Screen.height * 0.62f, 600, 30), CrateInput.Hint, _center);
-            }
-        }
-
-        private static void Styles()
-        {
-            if (_box != null) return;
-            var bg = new Texture2D(1, 1);
-            bg.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.55f));
-            bg.Apply();
-            Object.DontDestroyOnLoad(bg);
-            _box = new GUIStyle(GUI.skin.box);
-            _box.normal.background = bg;
-            _line = new GUIStyle(GUI.skin.label) { fontSize = 16, clipping = TextClipping.Clip, wordWrap = false };
-            _line.normal.textColor = Color.white;
-            _selected = new GUIStyle(_line) { fontStyle = FontStyle.Bold };
-            _selected.normal.textColor = new Color(1f, 0.85f, 0.45f);
-            _right = new GUIStyle(_line) { fontSize = 13, alignment = TextAnchor.MiddleRight };
-            _right.normal.textColor = new Color(1f, 1f, 1f, 0.6f);
-            _center = new GUIStyle(_selected) { alignment = TextAnchor.MiddleCenter, fontSize = 18 };
-            _prompt = new GUIStyle(_line) { fontSize = 17, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft };
-            _hint = new GUIStyle(_line) { fontSize = 12 };
-            _hint.normal.textColor = new Color(1f, 1f, 1f, 0.7f);
+            GUI.Label(new Rect(Screen.width / 2f - 300, Screen.height * 0.62f, 600, 30), CrateInput.Hint, _center);
         }
     }
 }

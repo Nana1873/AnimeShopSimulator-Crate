@@ -18,6 +18,9 @@ namespace AnimeShopCrate
 
         internal static string Label => _key != null ? _key.displayName : "?";
 
+        /// <summary>The game action whose key is used (for the native key prompt). Hand = E by default.</summary>
+        internal static InputEnum Action { get; private set; } = InputEnum.Hand;
+
         internal static void Reset() => _key = null;
 
         internal static bool WasPressed()
@@ -42,6 +45,7 @@ namespace AnimeShopCrate
                 {
                     var input = AllServices.Get<InputService>();
                     InputEnum action = PlaceBoxAction(out source);
+                    Action = action;
                     wanted = input?._config?.GetKey(action, input._player);
                 }
                 catch (Exception e) { Settings.Debug("reading the game's drop key failed: " + e.Message); wanted = null; }
