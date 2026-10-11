@@ -63,8 +63,32 @@ namespace AnimeShopCrate
                 return null;
             }
             b.center -= root.transform.position;
+            DumpParts(def, prefab.transform, renderers, b, root.transform.position);
             root.SetActive(false);
             return new Model { Template = root, Bounds = b };
+        }
+
+        // Debug aid: UserData/AnimeShopCrate/models.txt lists each product model's parts and sizes.
+        private static void DumpParts(ProductDefinition def, Transform prefab, Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<MeshRenderer> renderers, Bounds total, Vector3 origin)
+        {
+            if (!Settings.DebugLog.Value) return;
+            try
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine($"== {def.Name} (id {def.Id}, type {def.Type}) prefab '{prefab.name}' total size {total.size} centre {total.center}");
+                foreach (var r in renderers)
+                {
+                    if (r == null) continue;
+                    var mf = r.GetComponent<MeshFilter>();
+                    sb.AppendLine($"   {CrateVisual.Path(r.transform)}  size {r.bounds.size}  centre {r.bounds.center - origin}  mesh '{mf?.sharedMesh?.name}'  mat '{(r.sharedMaterial != null ? r.sharedMaterial.name : "-")}'");
+                }
+                foreach (var sk in prefab.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                    sb.AppendLine($"   (skinned, copied in rest pose) {sk.name}  mesh '{sk.sharedMesh?.name}'");
+                string dir = System.IO.Path.Combine(MelonLoader.Utils.MelonEnvironment.UserDataDirectory, "AnimeShopCrate");
+                System.IO.Directory.CreateDirectory(dir);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(dir, "models.txt"), sb.ToString());
+            }
+            catch (System.Exception e) { Settings.Debug("model dump failed: " + e.Message); }
         }
 
         private static void CopyTree(Transform src, Transform parent)
@@ -89,6 +113,18 @@ namespace AnimeShopCrate
                 var r = go.AddComponent<MeshRenderer>();
                 r.sharedMaterials = mr.sharedMaterials;
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+            else
+            {
+                // Skinned parts (some figures): use the mesh in its rest pose as a static copy.
+                var sk = src.GetComponent<SkinnedMeshRenderer>();
+                if (sk != null && sk.enabled && sk.sharedMesh != null)
+                {
+                    go.AddComponent<MeshFilter>().sharedMesh = sk.sharedMesh;
+                    var r = go.AddComponent<MeshRenderer>();
+                    r.sharedMaterials = sk.sharedMaterials;
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                }
             }
             for (int i = 0; i < src.childCount; i++) CopyTree(src.GetChild(i), go.transform);
         }
