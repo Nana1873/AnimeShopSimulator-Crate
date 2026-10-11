@@ -7,10 +7,23 @@ namespace AnimeShopCrate
     /// <summary>Fills a crate model with small copies of the products it holds.</summary>
     internal static class CrateContents
     {
+        /// <summary>Outlines the copies of one product (the selected one) inside a crate.</summary>
+        internal static void Highlight(GameObject crate, string productId)
+        {
+            var contents = crate != null ? crate.transform.Find("Contents") : null;
+            if (contents == null) return;
+            for (int i = 0; i < contents.childCount; i++)
+            {
+                var child = contents.GetChild(i).gameObject;
+                bool on = productId != null && child.name.Length > 2 && Ids.Same(child.name.Substring(2), productId);
+                CrateOutline.Set(child, on);
+            }
+        }
+
         private const int Columns = 3, Rows = 2, Layers = 3;
         private const int MaxShown = Columns * Rows * Layers;
 
-        internal static void Fill(GameObject crate, List<CrateItem> items)
+        internal static void Fill(GameObject crate, List<CrateItem> items, bool outlines = false)
         {
             if (crate == null) return;
             var old = crate.transform.Find("Contents");
@@ -37,7 +50,9 @@ namespace AnimeShopCrate
                 shown++;
 
                 var copy = Object.Instantiate(model.Template, contents.transform);
+                copy.name = "P_" + item.ProductId;
                 copy.SetActive(true);
+                if (outlines) CrateOutline.Attach(copy);
                 Vector3 size = model.Bounds.size;
                 // Tall items (manga, boxes standing up) lie down so they fit the flat cells.
                 bool lieDown = size.y > size.x && size.y > size.z;

@@ -29,6 +29,7 @@ namespace AnimeShopCrate
         {
             internal GameObject Crate;
             internal ulong Owner;
+            internal bool Local;
         }
 
         private static readonly Dictionary<IntPtr, Held> Crates = new();
@@ -41,9 +42,21 @@ namespace AnimeShopCrate
             foreach (var h in Crates.Values)
                 if (h.Crate != null && h.Owner == owner)
                 {
-                    CrateContents.Fill(h.Crate, CrateStore.Get(owner));
+                    CrateContents.Fill(h.Crate, CrateStore.Get(owner), h.Local);
                     SetLayer(h.Crate.transform, h.Crate.layer);
+                    _highlighted = null;
                 }
+        }
+
+        private static string _highlighted;
+
+        /// <summary>Outline the selected product in the local player's held crate.</summary>
+        internal static void HighlightSelected(string productId)
+        {
+            if (productId == _highlighted) return;
+            _highlighted = productId;
+            foreach (var h in Crates.Values)
+                if (h.Crate != null && h.Local) CrateContents.Highlight(h.Crate, productId);
         }
         private static Material _material;
 
@@ -73,9 +86,10 @@ namespace AnimeShopCrate
                 crate.transform.localPosition = (firstPerson ? FirstPersonBase : ThirdPersonBase) + Settings.Offset(firstPerson);
                 crate.transform.localRotation = Quaternion.Euler((firstPerson ? FirstPersonTilt : Vector3.zero) + Settings.Tilt(firstPerson));
                 crate.transform.localScale = Vector3.one * (firstPerson ? FirstPersonScale : 1f) * Settings.Scale.Value;
-                CrateContents.Fill(crate, CrateStore.Get(player.SteamId));
+                CrateContents.Fill(crate, CrateStore.Get(player.SteamId), firstPerson);
                 SetLayer(crate.transform, layer);
-                Crates[key] = new Held { Crate = crate, Owner = player.SteamId };
+                Crates[key] = new Held { Crate = crate, Owner = player.SteamId, Local = firstPerson };
+                _highlighted = null;
                 Settings.Debug($"crate model created under '{Path(anchor)}' (layer {layer}, {(firstPerson ? "first" : "third")} person, root scale {player.transform.lossyScale}).");
             }
             crate.SetActive(visible);

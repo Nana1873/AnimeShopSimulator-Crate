@@ -84,6 +84,7 @@ namespace AnimeShopCrate
             if (groups.Count > 0 && Mathf.Abs(scroll) > 0.01f)
                 Selected = ((Selected + (scroll < 0 ? 1 : -1)) % groups.Count + groups.Count) % groups.Count;
             if (Selected >= groups.Count) Selected = Math.Max(0, groups.Count - 1);
+            CrateVisual.HighlightSelected(groups.Count > 0 ? groups[Selected].item.ProductId : null);
 
             bool put = Pressed(mouse.leftButton);
             bool take = !put && Pressed(mouse.rightButton);
