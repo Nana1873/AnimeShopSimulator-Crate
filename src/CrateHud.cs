@@ -5,7 +5,7 @@ namespace AnimeShopCrate
     /// <summary>Simple on-screen list of the local crate's contents while it is held.</summary>
     internal static class CrateHud
     {
-        private static GUIStyle _box, _line, _selected, _hint;
+        private static GUIStyle _box, _line, _selected, _hint, _right;
 
         internal static void Draw()
         {
@@ -21,14 +21,19 @@ namespace AnimeShopCrate
             float x = Screen.width - w - 24f, y = Screen.height * 0.35f;
 
             GUI.Box(new Rect(x, y, w, h), "", _box);
-            GUI.Label(new Rect(x + 12, y + 8, w - 24, lineH), $"Kiste  ({used}/{CrateRules.Capacity} Platz)", _line);
+            int count = 0;
+            foreach (var g in groups) count += g.count;
+            GUI.Label(new Rect(x + 12, y + 8, w - 24, lineH), $"Kiste: {count} {(count == 1 ? "Produkt" : "Produkte")} · Platz {used}/{CrateRules.Capacity}", _line);
             float ly = y + 36;
             if (groups.Count == 0) GUI.Label(new Rect(x + 12, ly, w - 24, lineH), "leer – Rechtsklick auf ein Regalfach", _line);
             for (int i = 0; i < groups.Count; i++)
             {
                 bool sel = i == CrateInput.Selected;
                 string name = CrateRules.Name(groups[i].item.DefinitionId);
-                GUI.Label(new Rect(x + 12, ly + i * lineH, w - 24, lineH), $"{(sel ? "▶ " : "   ")}{groups[i].count}× {name}", sel ? _selected : _line);
+                int space = CrateRules.SpaceOf(groups[i].item.DefinitionId) * groups[i].count;
+                var row = new Rect(x + 12, ly + i * lineH, w - 24, lineH);
+                GUI.Label(row, $"{(sel ? "▶ " : "   ")}{groups[i].count}× {name}", sel ? _selected : _line);
+                GUI.Label(row, $"{space} Platz", _right);
             }
             GUI.Label(new Rect(x + 12, y + h - 26, w - 24, lineH), "LMB einräumen · RMB nehmen · Mausrad wählen", _hint);
 
@@ -49,6 +54,8 @@ namespace AnimeShopCrate
             _line.normal.textColor = Color.white;
             _selected = new GUIStyle(_line) { fontStyle = FontStyle.Bold };
             _selected.normal.textColor = new Color(1f, 0.85f, 0.45f);
+            _right = new GUIStyle(_line) { fontSize = 13, alignment = TextAnchor.MiddleRight };
+            _right.normal.textColor = new Color(1f, 1f, 1f, 0.6f);
             _hint = new GUIStyle(_line) { fontSize = 12 };
             _hint.normal.textColor = new Color(1f, 1f, 1f, 0.7f);
         }
