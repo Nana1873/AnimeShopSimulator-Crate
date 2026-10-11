@@ -125,7 +125,7 @@ namespace AnimeShopCrate
                     if (data == null || slotNumber != _pendingSlot) return;
                     Directory.CreateDirectory(Dir);
                     string file = FileFor(slotNumber), tmp = file + ".tmp";
-                    File.WriteAllText(tmp, transactionId + "\n" + data, Encoding.UTF8);
+                    File.WriteAllText(tmp, transactionId + "\n" + data, new UTF8Encoding(false));
                     if (File.Exists(file)) File.Replace(tmp, file, file + ".bak");
                     else File.Move(tmp, file);
                     _pending = null;
