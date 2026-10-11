@@ -168,6 +168,9 @@ namespace AnimeShopCrate
                     best = c.Id;
                 }
             }
+            // Something in between (table, shelf, wall) hides the crate. The crate itself has no collider.
+            if (best != 0 && Physics.Raycast(origin, dir, out RaycastHit hit, bestDist, ~0, QueryTriggerInteraction.Ignore))
+                return 0;
             return best;
         }
 

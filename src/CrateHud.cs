@@ -30,9 +30,10 @@ namespace AnimeShopCrate
 
             var groups = CrateInput.Groups();
             int used = CrateStore.UsedSpace(player.SteamId);
-            float lineH = 24f, w = 340f;
-            float h = 40f + lineH * Mathf.Max(1, groups.Count) + 28f;
-            float x = Screen.width - w - 24f, y = Screen.height * 0.35f;
+            float lineH = 24f, w = 400f;
+            float h = 40f + lineH * Mathf.Max(1, groups.Count) + 46f;
+            // Left side, below the level/cleanliness bars: the game's key prompts live on the right.
+            float x = 24f, y = Screen.height * 0.22f;
 
             GUI.Box(new Rect(x, y, w, h), "", _box);
             int count = 0;
@@ -46,10 +47,11 @@ namespace AnimeShopCrate
                 string name = CrateRules.Name(groups[i].item.DefinitionId);
                 int space = CrateRules.SpaceOf(groups[i].item.DefinitionId) * groups[i].count;
                 var row = new Rect(x + 12, ly + i * lineH, w - 24, lineH);
-                GUI.Label(row, $"{(sel ? "▶ " : "   ")}{groups[i].count}× {name}", sel ? _selected : _line);
+                GUI.Label(new Rect(row.x, row.y, row.width - 64, row.height), $"{(sel ? "▶ " : "   ")}{groups[i].count}× {name}", sel ? _selected : _line);
                 GUI.Label(row, $"{space} Platz", _right);
             }
-            GUI.Label(new Rect(x + 12, y + h - 26, w - 24, lineH), $"LMB einräumen · RMB nehmen · Mausrad wählen · {DropKey.Label} abstellen", _hint);
+            GUI.Label(new Rect(x + 12, y + h - 44, w - 24, 20), "LMB einräumen · RMB nehmen · Mausrad wählen", _hint);
+            GUI.Label(new Rect(x + 12, y + h - 24, w - 24, 20), $"{DropKey.Label} abstellen · 6 wegpacken", _hint);
             DrawHint();
         }
 
@@ -71,7 +73,7 @@ namespace AnimeShopCrate
             Object.DontDestroyOnLoad(bg);
             _box = new GUIStyle(GUI.skin.box);
             _box.normal.background = bg;
-            _line = new GUIStyle(GUI.skin.label) { fontSize = 16 };
+            _line = new GUIStyle(GUI.skin.label) { fontSize = 16, clipping = TextClipping.Clip, wordWrap = false };
             _line.normal.textColor = Color.white;
             _selected = new GUIStyle(_line) { fontStyle = FontStyle.Bold };
             _selected.normal.textColor = new Color(1f, 0.85f, 0.45f);
