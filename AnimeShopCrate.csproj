@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>AnimeShopCrate</AssemblyName>
+    <RootNamespace>AnimeShopCrate</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Override on the command line or in Directory.Build.props.user if the game lives elsewhere. -->
+    <GameDir Condition="'$(GameDir)' == ''">E:\SteamLibrary\steamapps\common\Anime Shop Simulator</GameDir>
+    <ML>$(GameDir)\MelonLoader</ML>
+    <Il2Cpp>$(ML)\Il2CppAssemblies</Il2Cpp>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="$(ML)\net6\MelonLoader.dll" Private="false" />
+    <Reference Include="$(ML)\net6\0Harmony.dll" Private="false" />
+    <Reference Include="$(ML)\net6\Il2CppInterop.Runtime.dll" Private="false" />
+    <Reference Include="$(ML)\net6\Il2CppInterop.Common.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\Il2Cppmscorlib.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\Il2CppSystem.Core.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\Il2CppProject.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\Il2CppFishNet.Runtime.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\Il2CppPieMenu.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\Il2CppUniTask.dll" Private="false" Condition="Exists('$(Il2Cpp)\Il2CppUniTask.dll')" />
+    <Reference Include="$(Il2Cpp)\Unity.TextMeshPro.dll" Private="false" Condition="Exists('$(Il2Cpp)\Unity.TextMeshPro.dll')" />
+    <Reference Include="$(Il2Cpp)\UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\Unity.InputSystem.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\UnityEngine.PhysicsModule.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\UnityEngine.UI.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\UnityEngine.UIModule.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\UnityEngine.InputLegacyModule.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\UnityEngine.IMGUIModule.dll" Private="false" />
+    <Reference Include="$(Il2Cpp)\UnityEngine.TextRenderingModule.dll" Private="false" />
+  </ItemGroup>
+
+  <!-- Copy the built mod into the game's Mods folder when the game is not running. -->
+  <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(Deploy)' == 'true'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)\Mods" ContinueOnError="true" />
+  </Target>
+</Project>
