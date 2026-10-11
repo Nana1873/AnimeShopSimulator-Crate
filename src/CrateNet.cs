@@ -2,6 +2,7 @@ using System;
 using HarmonyLib;
 using Il2CppProject.Code.Gameplay.Player.Controllers;
 using Il2CppProject.Code.Gameplay.Player.Products;
+using Il2CppFishNet.Serializing;
 
 namespace AnimeShopCrate
 {
@@ -86,6 +87,30 @@ namespace AnimeShopCrate
                 if (A_1 == null || !A_1.StartsWith(CrateStore.Prefix, StringComparison.Ordinal)) return true;
                 try { if (A_1 == CmdSync) BroadcastAll(); }
                 catch (Exception e) { CrateMod.Log.Error("crate sync failed on the host: " + e); }
+                return false;
+            }
+        }
+
+        // The game compiled RpcLogic___PlayEmojiObserversRpc into its network reader, so on clients the
+        // message never passes through the RpcLogic patch below. Read it here, handle ours, and pass the
+        // rest to the game's logic as the reader would.
+        [HarmonyPatch(typeof(PlayerAnimationController), nameof(PlayerAnimationController.RpcReader___Observers_PlayEmojiObserversRpc_3615296227))]
+        private static class ObserverReaderPatch
+        {
+            private static bool Prefix(PlayerAnimationController __instance, PooledReader PooledReader0)
+            {
+                if (PooledReader0 == null) return true;
+                string text = PooledReader0.ReadString();
+                if (text != null && text.StartsWith(CrateStore.Prefix, StringComparison.Ordinal))
+                {
+                    Settings.Trace("received crate update");
+                    try { CrateStore.Apply(text); }
+                    catch (Exception e) { CrateMod.Log.Error("crate update failed: " + e); }
+                }
+                else
+                {
+                    __instance.RpcLogic___PlayEmojiObserversRpc_3615296227(text);
+                }
                 return false;
             }
         }
