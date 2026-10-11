@@ -32,6 +32,10 @@ namespace AnimeShopCrate
         {
             _synced = false;
             Selected = 0;
+            // The scene is gone, and the game resets its own UI mode with it.
+            _dialogOpen = false;
+            _confirmedTrash = System.IntPtr.Zero;
+            _confirmedUntil = 0f;
         }
 
         /// <summary>Distinct products in the local crate, in order of first appearance, with counts.</summary>
@@ -54,6 +58,7 @@ namespace AnimeShopCrate
 
         internal static void Update()
         {
+            WatchDialog();
             var player = Game.LocalPlayer;
             if (player == null) return;
             // Ask the host for all crates once per session (late joiners see crates standing around).
@@ -126,6 +131,7 @@ namespace AnimeShopCrate
                 if (comp != null) found = comp.GetComponentInParent<Il2CppProject.Code.Gameplay.Interactions.TrashCan>();
             }
             if (found?.Pointer == AimedTrash?.Pointer) return;
+            if (found == null || found.Pointer != _confirmedTrash) _confirmedTrash = System.IntPtr.Zero;
             try { AimedTrash?.EnableLook(false); } catch { }
             AimedTrash = found;
             try { AimedTrash?.EnableLook(true); } catch { }
@@ -133,18 +139,73 @@ namespace AnimeShopCrate
 
         internal static void ClearTrashAim()
         {
+            _confirmedTrash = System.IntPtr.Zero;
             if (AimedTrash == null) return;
             try { AimedTrash.EnableLook(false); } catch { }
             AimedTrash = null;
         }
+
+        private static System.IntPtr _confirmedTrash;
+        private static float _confirmedUntil;
 
         private static void Trash(List<(CrateItem item, int count)> groups)
         {
             if (groups.Count == 0) { Say(Text.Get("w.crate_empty")); return; }
             if (!Game.TrashAllowed()) { Say(Text.Get("w.trash_off")); return; }
             var chosen = groups[Selected].item;
-            CrateNet.SendCommand(CrateNet.CmdTrash + chosen.ProductId);
-            try { AimedTrash.PlayTrashSound(); } catch { }
+            var can = AimedTrash;
+            // Like the game: ask before throwing away. One "yes" covers more clicks on the same
+            // trash can for a short while, so emptying a crate is not a dialog per product.
+            if (can.Pointer == _confirmedTrash && Time.time < _confirmedUntil)
+            {
+                ThrowAway(can, chosen.ProductId);
+                return;
+            }
+            var ui = AllServices.Get<Il2CppProject.Code.Core.UI.UIService>();
+            if (ui == null) { ThrowAway(can, chosen.ProductId); return; }
+            string productId = chosen.ProductId;
+            var p = new Il2CppProject.Code.Gameplay.UI.Other.WarningView.Params();
+            p.OnConfirm = (Il2CppSystem.Action)(System.Action)(() =>
+            {
+                CloseDialog();
+                _confirmedTrash = can.Pointer;
+                ThrowAway(can, productId);
+            });
+            p.OnRefuse = (Il2CppSystem.Action)(System.Action)(CloseDialog);
+            try
+            {
+                // Like the game: free the mouse and pause gameplay input while the dialog is open.
+                Game.LocalPlayer?._uiController?.SetUIModeActive(true);
+                _dialogOpen = true;
+                _dialogSince = Time.time;
+                ui.ShowWarningView(p);
+            }
+            catch (Exception e) { CloseDialog(); CrateMod.Log.Warning("The confirm dialog could not open, throwing away without asking: " + e.Message); ThrowAway(can, productId); }
+        }
+
+        private static bool _dialogOpen;
+        private static float _dialogSince;
+
+        private static void CloseDialog()
+        {
+            if (!_dialogOpen) return;
+            _dialogOpen = false;
+            try { Game.LocalPlayer?._uiController?.SetUIModeActive(false); } catch { }
+        }
+
+        /// <summary>Releases the UI mode if the dialog was closed some other way (e.g. Escape).</summary>
+        private static void WatchDialog()
+        {
+            if (!_dialogOpen || Time.time - _dialogSince < 0.5f) return;
+            var view = UnityEngine.Object.FindObjectOfType<Il2CppProject.Code.Gameplay.UI.Other.WarningView>();
+            if (view == null || !view.gameObject.activeInHierarchy) CloseDialog();
+        }
+
+        private static void ThrowAway(Il2CppProject.Code.Gameplay.Interactions.TrashCan can, string productId)
+        {
+            _confirmedUntil = Time.time + 10f;
+            CrateNet.SendCommand(CrateNet.CmdTrash + productId);
+            try { can?.PlayTrashSound(); } catch { }
         }
 
         private static bool HandsFree(Il2CppProject.Code.Gameplay.Player.Controllers.PlayerCharacterController player) =>
