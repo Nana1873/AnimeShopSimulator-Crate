@@ -108,13 +108,19 @@ namespace AnimeShopCrate
             if (target == null) return null;
             var place = target.TryCast<ProductPlace>();
             if (place != null) return place;
+            var interactor = target.TryCast<ProductsPlaceInteractor>();
+            if (interactor != null) return interactor.ProductPlace;
             var price = target.TryCast<ProductPricePlace>();
             if (price != null) return price._productPlace;
             var box = target.TryCast<PickupProducts>();
             if (box != null) return box._productPlace;
             var comp = target.TryCast<Component>();
-            if (comp == null) return null;
-            return comp.GetComponentInParent<ProductPlace>() ?? comp.GetComponentInParent<PickupProducts>()?._productPlace;
+            var found = comp == null ? null
+                : comp.GetComponentInParent<ProductPlace>() ?? comp.GetComponentInParent<PickupProducts>()?._productPlace;
+            if (found == null)
+                Settings.Debug("aimed at an unsupported object: " + target.Cast<Il2CppSystem.Object>().GetIl2CppType().FullName
+                    + (comp != null ? $" ('{comp.name}')" : ""));
+            return found;
         }
 
         internal static void Say(string text)
