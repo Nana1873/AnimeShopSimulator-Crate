@@ -21,6 +21,9 @@ namespace AnimeShopCrate
         private static readonly Vector3 FirstPersonBase = new Vector3(0f, -0.12f, 0.08f);
         private static readonly Vector3 FirstPersonTilt = new Vector3(-20f, 0f, 0f);
         private const float FirstPersonScale = 0.8f;
+        // Third person: carried in front of the body at waist height, relative to the character root.
+        // The game's third-person product socket sits on the left hand bone and swings with the arm.
+        private static readonly Vector3 ThirdPersonBase = new Vector3(0f, 0.95f, 0.42f);
 
         private static readonly Dictionary<IntPtr, GameObject> Crates = new();
         private static Material _material;
@@ -44,13 +47,15 @@ namespace AnimeShopCrate
                     return;
                 }
                 crate = Build();
+                int layer = anchor.gameObject.layer;
+                if (!firstPerson) anchor = player.transform;
                 crate.transform.SetParent(anchor, false);
-                crate.transform.localPosition = (firstPerson ? FirstPersonBase : Vector3.zero) + Settings.Offset(firstPerson);
+                crate.transform.localPosition = (firstPerson ? FirstPersonBase : ThirdPersonBase) + Settings.Offset(firstPerson);
                 crate.transform.localRotation = Quaternion.Euler((firstPerson ? FirstPersonTilt : Vector3.zero) + Settings.Tilt(firstPerson));
                 crate.transform.localScale = Vector3.one * (firstPerson ? FirstPersonScale : 1f) * Settings.Scale.Value;
-                SetLayer(crate.transform, anchor.gameObject.layer);
+                SetLayer(crate.transform, layer);
                 Crates[key] = crate;
-                Settings.Debug($"crate model created under '{Path(anchor)}' (layer {anchor.gameObject.layer}, {(firstPerson ? "first" : "third")} person).");
+                Settings.Debug($"crate model created under '{Path(anchor)}' (layer {layer}, {(firstPerson ? "first" : "third")} person, root scale {player.transform.lossyScale}).");
             }
             crate.SetActive(visible);
         }
