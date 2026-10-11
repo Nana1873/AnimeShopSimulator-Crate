@@ -119,6 +119,10 @@ namespace AnimeShopCrate
                 if (def != null && !place.CanPut(def.Type)) { Say("Das passt nicht in dieses Fach."); return; }
                 productId = chosen.ProductId;
             }
+            var item = groups.Find(g => Ids.Same(g.item.ProductId, productId)).item;
+            var putDef = item != null ? CrateRules.Definition(item.DefinitionId) : null;
+            var typeSettings = putDef != null ? AllServices.Get<ProductsService>()?._config?.FindProductTypeSetting(putDef.Type) : null;
+            if (typeSettings != null && place.Count >= place.GetCapacity(typeSettings, putDef, null)) { Say("Das Fach ist voll."); return; }
             Settings.Trace("put: sending " + productId);
             CrateNet.SendPlaceCommand(place, CrateNet.CmdPut + productId);
             Settings.Trace("put: sent");
@@ -139,10 +143,32 @@ namespace AnimeShopCrate
             var comp = target.TryCast<Component>();
             var found = comp == null ? null
                 : comp.GetComponentInParent<ProductPlace>() ?? comp.GetComponentInParent<PickupProducts>()?._productPlace;
+            // Empty slots are not hit by the hands' raycast; the shelf behind them is.
+            // Take the shelf's slot nearest to the point you look at.
+            if (found == null && comp != null) found = NearestSlot(comp, Game.LocalPlayer._raycastController);
             if (found == null)
                 Settings.Debug("aimed at an unsupported object: " + target.Cast<Il2CppSystem.Object>().GetIl2CppType().FullName
                     + (comp != null ? $" ('{comp.name}')" : ""));
             return found;
+        }
+
+        private const float SlotPickRadius = 0.3f;
+
+        private static ProductPlace NearestSlot(Component shelf, Il2CppProject.Code.Gameplay.Player.Controllers.PlayerRaycastController ray)
+        {
+            if (ray == null || !ray.HasHitPoint) return null;
+            Vector3 hit = ray.HitPoint;
+            ProductPlace best = null;
+            float bestDist = SlotPickRadius;
+            var places = shelf.GetComponentsInChildren<ProductPlace>(true);
+            foreach (var p in places)
+            {
+                if (p == null || p._pickupProducts != null) continue;
+                var col = p.GetComponent<Collider>() ?? p.GetComponentInChildren<Collider>(true);
+                float d = col != null ? Vector3.Distance(col.ClosestPointOnBounds(hit), hit) : Vector3.Distance(p.transform.position, hit);
+                if (d < bestDist) { bestDist = d; best = p; }
+            }
+            return best;
         }
 
         internal static void Say(string text)
