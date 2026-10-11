@@ -18,9 +18,9 @@ namespace AnimeShopCrate
         private static readonly Color CrateColor = new Color(0.16f, 0.45f, 0.85f);
         // Built-in pose relative to the held-item slot; the settings offsets are added on top.
         // First person: low and a bit forward, tilted towards the camera so you can look inside.
-        private static readonly Vector3 FirstPersonBase = new Vector3(0f, -0.12f, 0.08f);
-        private static readonly Vector3 FirstPersonTilt = new Vector3(-20f, 0f, 0f);
-        private const float FirstPersonScale = 0.8f;
+        private static readonly Vector3 FirstPersonBase = new Vector3(0f, -0.10f, 0.24f);
+        private static readonly Vector3 FirstPersonTilt = new Vector3(-38f, 0f, 0f);
+        private const float FirstPersonScale = 0.68f;
         // Third person: carried in front of the body at waist height, relative to the character root.
         // The game's third-person product socket sits on the left hand bone and swings with the arm.
         private static readonly Vector3 ThirdPersonBase = new Vector3(0f, 1.0f, 0.27f);

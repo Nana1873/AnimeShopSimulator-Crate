@@ -247,6 +247,9 @@ namespace AnimeShopCrate
                 yield return AccessTools.Method(typeof(TakeItemFromProductPlaceInteraction), nameof(TakeItemFromProductPlaceInteraction.Process));
                 yield return AccessTools.Method(typeof(TakeItemFromPickupInteraction), nameof(TakeItemFromPickupInteraction.Process));
                 yield return AccessTools.Method(typeof(ScatterShelfProductsInteraction), nameof(ScatterShelfProductsInteraction.Process));
+                // E ("move object") is the crate's set-down key while it is held.
+                yield return AccessTools.Method(typeof(ReplaceObjectInteraction), nameof(ReplaceObjectInteraction.Process));
+                yield return AccessTools.Method(typeof(ReplaceBattleTableInteraction), nameof(ReplaceBattleTableInteraction.Process));
             }
 
             private static bool Prefix() => !CrateMode.IsLocalActive;
