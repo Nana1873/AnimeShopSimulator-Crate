@@ -30,7 +30,7 @@ namespace AnimeShopCrate
             if (anim == null || interactions == null || !Hooks.Enabled) return;
             if (!pickingUp && WorldCrates.HasCrateOf(player.SteamId))
             {
-                CrateInput.Say("Deine Kiste steht noch irgendwo – heb sie zuerst wieder auf.");
+                CrateInput.Say(Text.Get("w.elsewhere"));
                 return;
             }
             if (!interactions.CanOpenInventoryMenu)

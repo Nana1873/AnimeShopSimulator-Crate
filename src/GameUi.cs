@@ -69,7 +69,7 @@ namespace AnimeShopCrate
 
         private static string Signature(List<(CrateItem item, int count)> groups, int used)
         {
-            var sb = new StringBuilder().Append(used).Append('|').Append(CrateInput.Selected).Append('|').Append(Text.German);
+            var sb = new StringBuilder().Append(used).Append('|').Append(CrateInput.Selected).Append('|').Append(Text.Language);
             foreach (var g in groups) sb.Append(g.item.DefinitionId).Append('x').Append(g.count).Append(';');
             return sb.ToString();
         }
@@ -171,7 +171,7 @@ namespace AnimeShopCrate
         {
             int count = 0;
             foreach (var g in groups) count += g.count;
-            _title.text = $"{Text.Get("crate")}  ·  {count} {Text.Get(count == 1 ? "product" : "products")}  ·  {Text.Get("space")} {used}/{CrateRules.Capacity}";
+            _title.text = $"{Text.Get("crate")}  ·  {count} {Text.Get("pieces")}  ·  {Text.Get("space")} {used}/{CrateRules.Capacity}";
             _footer.text = groups.Count == 0 ? Text.Get("empty") : "";
             _footer.gameObject.SetActive(groups.Count == 0);
 

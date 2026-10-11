@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="local.props" Condition="Exists('local.props')" />
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>AnimeShopCrate</AssemblyName>
@@ -7,8 +8,8 @@
     <Nullable>disable</Nullable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <!-- Override on the command line or in Directory.Build.props.user if the game lives elsewhere. -->
-    <GameDir Condition="'$(GameDir)' == ''">E:\SteamLibrary\steamapps\common\Anime Shop Simulator</GameDir>
+    <!-- Game folder: set it in local.props (not committed, see local.props.example) or with -p:GameDir=... -->
+    <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Anime Shop Simulator</GameDir>
     <ML>$(GameDir)\MelonLoader</ML>
     <Il2Cpp>$(ML)\Il2CppAssemblies</Il2Cpp>
   </PropertyGroup>

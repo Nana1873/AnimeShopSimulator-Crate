@@ -1,0 +1,6 @@
+<Project>
+  <!-- Copy to local.props and point GameDir at your Anime Shop Simulator folder. -->
+  <PropertyGroup>
+    <GameDir>D:\SteamLibrary\steamapps\common\Anime Shop Simulator</GameDir>
+  </PropertyGroup>
+</Project>

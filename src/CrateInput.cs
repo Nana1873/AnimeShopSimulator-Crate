@@ -105,7 +105,7 @@ namespace AnimeShopCrate
             if (place == null)
             {
                 // Only complain at shelves and boxes; a click on a computer, door etc. is not meant for the crate.
-                if (_aimingAtStorage) Say("Hier kann die Kiste nichts nehmen oder einräumen.");
+                if (_aimingAtStorage) Say(Text.Get("w.nothing"));
                 return;
             }
             if (take) TryTake(place);
@@ -140,8 +140,8 @@ namespace AnimeShopCrate
 
         private static void Trash(List<(CrateItem item, int count)> groups)
         {
-            if (groups.Count == 0) { Say("Die Kiste ist leer."); return; }
-            if (!Game.TrashAllowed()) { Say("Produkte wegwerfen ist in dieser Lobby ausgeschaltet."); return; }
+            if (groups.Count == 0) { Say(Text.Get("w.crate_empty")); return; }
+            if (!Game.TrashAllowed()) { Say(Text.Get("w.trash_off")); return; }
             var chosen = groups[Selected].item;
             CrateNet.SendCommand(CrateNet.CmdTrash + chosen.ProductId);
             try { AimedTrash.PlayTrashSound(); } catch { }
@@ -163,12 +163,12 @@ namespace AnimeShopCrate
             var player = Game.LocalPlayer;
             if (CrateStore.Get(player.SteamId).Count > 0)
             {
-                Say("Deine Kiste ist nicht leer – erst ausräumen oder abstellen.");
+                Say(Text.Get("w.not_empty"));
                 return;
             }
             if (WorldCrates.OwnerOf(id) != 0 && WorldCrates.OwnerOf(id) != player.SteamId)
             {
-                Say("Das ist die Kiste von einem Mitspieler.");
+                Say(Text.Get("w.other_crate"));
                 return;
             }
             CrateMode.Enter(pickingUp: true);
@@ -185,15 +185,15 @@ namespace AnimeShopCrate
         private static void TryTake(ProductPlace place)
         {
             Settings.Trace("take: count " + place.Count);
-            if (place.Count <= 0) { Say("Hier liegt nichts."); return; }
+            if (place.Count <= 0) { Say(Text.Get("w.slot_empty")); return; }
             var box = place._pickupProducts;
-            if (box != null && !box.IsOpened) { Say("Aus geschlossenen Kartons kann die Kiste nichts nehmen."); return; }
+            if (box != null && !box.IsOpened) { Say(Text.Get("w.closed_box")); return; }
             Settings.Trace("take: resolving definition");
             var def = ProductHandsUtility.ResolveProductDefinition(AllServices.Get<ProductsService>(), place.Id);
             Settings.Trace("take: definition " + (def == null ? "null" : def.Name + " " + def.Type));
-            if (!CrateRules.Allowed(def)) { Say($"{def?.Name ?? "Das"} passt nicht in die Kiste."); return; }
+            if (!CrateRules.Allowed(def)) { Say(Text.Format("w.not_allowed", def?.Name ?? "?")); return; }
             var player = Game.LocalPlayer;
-            if (CrateStore.UsedSpace(player.SteamId) + CrateRules.SpaceOf(def) > CrateRules.Capacity) { Say("Die Kiste ist voll."); return; }
+            if (CrateStore.UsedSpace(player.SteamId) + CrateRules.SpaceOf(def) > CrateRules.Capacity) { Say(Text.Get("w.crate_full")); return; }
             Settings.Trace("take: sending");
             CrateNet.SendPlaceCommand(place, CrateNet.CmdTake);
             Settings.Trace("take: sent");
@@ -202,14 +202,14 @@ namespace AnimeShopCrate
         private static void TryPut(ProductPlace place, List<(CrateItem item, int count)> groups)
         {
             Settings.Trace("put: groups " + groups.Count + ", place count " + place.Count);
-            if (groups.Count == 0) { Say("Die Kiste ist leer."); return; }
+            if (groups.Count == 0) { Say(Text.Get("w.crate_empty")); return; }
             string productId;
             if (place.Count > 0)
             {
                 productId = Ids.ToText(place.Id);
                 if (groups.FindIndex(g => Ids.Same(g.item.ProductId, productId)) < 0)
                 {
-                    Say("In diesem Fach liegt ein anderes Produkt.");
+                    Say(Text.Get("w.wrong_product"));
                     return;
                 }
             }
@@ -217,13 +217,13 @@ namespace AnimeShopCrate
             {
                 var chosen = groups[Selected].item;
                 var def = CrateRules.Definition(chosen.DefinitionId);
-                if (def != null && !place.CanPut(def.Type)) { Say("Das passt nicht in dieses Fach."); return; }
+                if (def != null && !place.CanPut(def.Type)) { Say(Text.Get("w.wrong_slot")); return; }
                 productId = chosen.ProductId;
             }
             var item = groups.Find(g => Ids.Same(g.item.ProductId, productId)).item;
             var putDef = item != null ? CrateRules.Definition(item.DefinitionId) : null;
             var typeSettings = putDef != null ? AllServices.Get<ProductsService>()?._config?.FindProductTypeSetting(putDef.Type) : null;
-            if (typeSettings != null && place.Count >= place.GetCapacity(typeSettings, putDef, null)) { Say("Das Fach ist voll."); return; }
+            if (typeSettings != null && place.Count >= place.GetCapacity(typeSettings, putDef, null)) { Say(Text.Get("w.slot_full")); return; }
             Settings.Trace("put: sending " + productId);
             CrateNet.SendPlaceCommand(place, CrateNet.CmdPut + productId);
             Settings.Trace("put: sent");

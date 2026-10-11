@@ -65,8 +65,8 @@ namespace AnimeShopCrate
             }
             clone.id = CrateMode.CrateMenuId;
             clone.idAssigned = true;
-            clone.header = "Kiste";
-            clone.details = "Produkte sammeln und einräumen";
+            clone.header = Text.Get("wheel.header");
+            clone.details = Text.Get("wheel.details");
             clone.gameObject.name = "Menu Item Crate";
 
             // The wheel lays slots out counter-clockwise by sibling index starting at the hand.

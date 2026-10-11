@@ -1,7 +1,7 @@
 using AnimeShopCrate;
 using MelonLoader;
 
-[assembly: MelonInfo(typeof(CrateMod), "Anime Shop Crate", "0.1.0", "jmach")]
+[assembly: MelonInfo(typeof(CrateMod), "Anime Shop Crate", "0.2.0", "Nana1873")]
 [assembly: MelonGame("OneMoreTime", "Anime Shop Simulator")]
 // Patches are applied per feature by Hooks, with a report in the log.
 [assembly: HarmonyDontPatchAll]
