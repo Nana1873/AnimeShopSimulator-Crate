@@ -16,6 +16,11 @@ namespace AnimeShopCrate
         // Outer size in metres.
         private const float Width = 0.42f, Depth = 0.30f, Height = 0.22f, Wall = 0.015f;
         private static readonly Color CrateColor = new Color(0.16f, 0.45f, 0.85f);
+        // Built-in pose relative to the held-item slot; the settings offsets are added on top.
+        // First person: low and a bit forward, tilted towards the camera so you can look inside.
+        private static readonly Vector3 FirstPersonBase = new Vector3(0f, -0.38f, 0.18f);
+        private static readonly Vector3 FirstPersonTilt = new Vector3(-25f, 0f, 0f);
+        private const float FirstPersonScale = 0.8f;
 
         private static readonly Dictionary<IntPtr, GameObject> Crates = new();
         private static Material _material;
@@ -40,9 +45,9 @@ namespace AnimeShopCrate
                 }
                 crate = Build();
                 crate.transform.SetParent(anchor, false);
-                crate.transform.localPosition = Settings.Offset(firstPerson);
-                crate.transform.localRotation = Quaternion.identity;
-                crate.transform.localScale = Vector3.one * Settings.Scale.Value;
+                crate.transform.localPosition = (firstPerson ? FirstPersonBase : Vector3.zero) + Settings.Offset(firstPerson);
+                crate.transform.localRotation = Quaternion.Euler((firstPerson ? FirstPersonTilt : Vector3.zero) + Settings.Tilt(firstPerson));
+                crate.transform.localScale = Vector3.one * (firstPerson ? FirstPersonScale : 1f) * Settings.Scale.Value;
                 SetLayer(crate.transform, anchor.gameObject.layer);
                 Crates[key] = crate;
                 Settings.Debug($"crate model created under '{Path(anchor)}' (layer {anchor.gameObject.layer}, {(firstPerson ? "first" : "third")} person).");

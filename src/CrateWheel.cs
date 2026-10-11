@@ -18,6 +18,8 @@ namespace AnimeShopCrate
         private static IntPtr _viewWithCrate;
         private static int _crateIconIndex = -1;
         private static int _vanillaIconCount = -1;
+        private static int _crateLockIndex = -1;
+        private static int _vanillaLockCount = -1;
         private static Sprite _icon;
 
         private static void Ensure(InventoryView view)
@@ -67,15 +69,25 @@ namespace AnimeShopCrate
             clone.details = "Produkte sammeln und einräumen";
             clone.gameObject.name = "Menu Item Crate";
 
+            // The wheel lays slots out counter-clockwise by sibling index starting at the hand.
+            // Directly after the hand puts the crate at the clockwise end, i.e. as slot 6.
+            clone.transform.SetSiblingIndex(1);
+            var drawer = FindDrawer(pie);
+            if (drawer != null) drawer.Redraw(pie);
+            else { tracker.Initialize(dir); CrateMod.Log.Warning("pie menu drawer not found; the wheel may look uneven."); }
+
             _vanillaIconCount = view._toolImages?.Count ?? 0;
+            _vanillaLockCount = view._toolLockIcons?.Count ?? 0;
             _crateIconIndex = -1;
+            _crateLockIndex = -1;
             AdoptIcon(view, source.transform, clone.transform);
             AdoptLock(view, source.transform, clone.transform);
             _viewWithCrate = view.Pointer;
 
             view.RefreshLockIcons();
             view.RefreshToolImages();
-            Settings.Debug($"wheel after: {tracker.PieMenuItems.Count} items, {view._toolImages?.Count} icons (crate icon index {_crateIconIndex}).");
+            Settings.Debug($"wheel after: {tracker.PieMenuItems.Count} items, {view._toolImages?.Count} icons (crate icon index {_crateIconIndex}, lock index {_crateLockIndex}).");
+            WheelDump.Write(view);
         }
 
         // The vanilla icon of the cloned slot lives inside the slot: find the same child in the clone.
@@ -107,9 +119,17 @@ namespace AnimeShopCrate
                 var go = locks[i];
                 if (go == null || !go.transform.IsChildOf(source)) continue;
                 var copy = Find(clone, RelativePath(source, go.transform));
-                if (copy != null) locks.Add(copy.gameObject);
+                if (copy != null) { locks.Add(copy.gameObject); _crateLockIndex = locks.Count - 1; }
                 return;
             }
+        }
+
+        private static PieMenuDrawer FindDrawer(PieMenu pie)
+        {
+            var d = pie.GetComponentInChildren<PieMenuDrawer>(true);
+            if (d == null && PieMenuShared.Instance != null) d = PieMenuShared.Instance.GetComponentInChildren<PieMenuDrawer>(true);
+            if (d == null) d = Object.FindObjectOfType<PieMenuDrawer>(true);
+            return d;
         }
 
         private static int EntryCount(InventoryView view)
@@ -183,11 +203,14 @@ namespace AnimeShopCrate
         {
             private static bool Prefix(InventoryView __instance, int visualIndex, int visualsCount, ref int __result)
             {
-                if (__instance.Pointer != _viewWithCrate || _crateIconIndex < 0) return true;
-                if (visualsCount != _vanillaIconCount + 1) return true; // lock list or other list
-                if (visualIndex == _crateIconIndex) { __result = CrateMode.CrateMenuId; return false; }
-                int entries = EntryCount(__instance);
-                __result = entries == _vanillaIconCount ? visualIndex + 1 : visualIndex;
+                if (__instance.Pointer != _viewWithCrate) return true;
+                int crateIndex, vanillaCount;
+                if (_crateIconIndex >= 0 && visualsCount == _vanillaIconCount + 1) { crateIndex = _crateIconIndex; vanillaCount = _vanillaIconCount; }
+                else if (_crateLockIndex >= 0 && visualsCount == _vanillaLockCount + 1) { crateIndex = _crateLockIndex; vanillaCount = _vanillaLockCount; }
+                else return true;
+                if (visualIndex == crateIndex) { __result = CrateMode.CrateMenuId; return false; }
+                // Vanilla rule with the list length it had before the crate was added.
+                __result = vanillaCount == EntryCount(__instance) ? visualIndex + 1 : visualIndex;
                 return false;
             }
         }

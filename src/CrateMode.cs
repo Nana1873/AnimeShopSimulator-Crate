@@ -51,6 +51,11 @@ namespace AnimeShopCrate
         {
             var kb = Keyboard.current;
             if (kb == null) return;
+            if ((kb.digit1Key.wasPressedThisFrame || kb.numpad1Key.wasPressedThisFrame) && IsLocalActive && Game.CanTakeKeys())
+            {
+                Exit();
+                return;
+            }
             if (!kb.digit6Key.wasPressedThisFrame && !kb.numpad6Key.wasPressedThisFrame) return;
             var player = Game.LocalPlayer;
             if (player == null || !Game.CanTakeKeys()) return;
@@ -70,7 +75,12 @@ namespace AnimeShopCrate
         {
             private static bool Prefix(PlayerUIController __instance, int menuItemId)
             {
-                if (menuItemId != CrateMenuId) return true;
+                if (menuItemId != CrateMenuId)
+                {
+                    // Hand is selected while the crate is held: the state does not change, so put it away here.
+                    if (menuItemId == 0) Exit();
+                    return true;
+                }
                 try
                 {
                     if (!IsLocalActive) Enter();
