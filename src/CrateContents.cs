@@ -35,7 +35,14 @@ namespace AnimeShopCrate
         {
             if (crate == null) return;
             var old = crate.transform.Find("Contents");
-            if (old != null) Object.Destroy(old.gameObject);
+            if (old != null)
+            {
+                // Destroy happens at the end of the frame: rename and hide it now so lookups
+                // (e.g. the selection outline) find the new contents, not the old ones.
+                old.name = "Contents_old";
+                old.gameObject.SetActive(false);
+                Object.Destroy(old.gameObject);
+            }
             if (items == null || items.Count == 0) return;
 
             var contents = new GameObject("Contents");
@@ -66,7 +73,10 @@ namespace AnimeShopCrate
                 Vector3 size = model.Bounds.size;
                 bool turn = size.x < size.z; // thin side along the crate's depth
                 Vector3 fp = turn ? new Vector3(size.z, size.y, size.x) : size;
-                float scale = Mathf.Min(1f,
+                // Figures are small next to manga at true size; show them a bit larger in the crate.
+                var defType = CrateRules.Definition(defId)?.Type;
+                float maxScale = defType == Il2CppProject.Code.Gameplay.Definitions.EProductType.Figure ? 1.3f : 1f;
+                float scale = Mathf.Min(maxScale,
                     innerW * 0.9f / Mathf.Max(fp.x, 0.001f),
                     innerH * 0.85f / Mathf.Max(fp.y, 0.001f),
                     innerD * 0.95f / Mathf.Max(fp.z, 0.001f));
