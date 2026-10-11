@@ -16,7 +16,7 @@ namespace AnimeShopCrate
         internal static void Init()
         {
             var cat = MelonPreferences.CreateCategory("AnimeShopCrate");
-            DebugLog = cat.CreateEntry("DebugLog", true, null, "Write extra diagnostics to the MelonLoader log.");
+            DebugLog = cat.CreateEntry("DebugLog", false, null, "Write extra diagnostics to the MelonLoader log.");
             FirstPersonX = cat.CreateEntry("FirstPersonOffsetX", 0f, null, "Extra shift of the crate in your own view (metres; X right, Y up, Z forward).");
             FirstPersonY = cat.CreateEntry("FirstPersonOffsetY", 0f);
             FirstPersonZ = cat.CreateEntry("FirstPersonOffsetZ", 0f);

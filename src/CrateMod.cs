@@ -3,6 +3,8 @@ using MelonLoader;
 
 [assembly: MelonInfo(typeof(CrateMod), "Anime Shop Crate", "0.1.0", "jmach")]
 [assembly: MelonGame("OneMoreTime", "Anime Shop Simulator")]
+// Patches are applied per feature by Hooks, with a report in the log.
+[assembly: HarmonyDontPatchAll]
 
 namespace AnimeShopCrate
 {
@@ -15,12 +17,14 @@ namespace AnimeShopCrate
             Log = LoggerInstance;
             Settings.Init();
             CrateStore.Changed += CrateVisual.Refresh;
-            // Harmony attributes in this assembly are applied by MelonLoader automatically.
-            Log.Msg("Anime Shop Crate loaded. Q wheel slot 6 / key 6 = crate.");
+            Hooks.CheckGameVersion();
+            Hooks.Apply(HarmonyInstance);
+            if (Hooks.Enabled) Log.Msg("Loaded. Q wheel slot 6 or key 6 = crate. Settings: UserData/MelonPreferences.cfg → [AnimeShopCrate].");
         }
 
         public override void OnUpdate()
         {
+            if (!Hooks.Enabled) return;
             CrateSave.Update();
             CrateMode.Update();
             CrateInput.Update();
@@ -30,6 +34,7 @@ namespace AnimeShopCrate
 
         public override void OnGUI()
         {
+            if (!Hooks.Enabled) return;
             CrateHud.Draw();
         }
 

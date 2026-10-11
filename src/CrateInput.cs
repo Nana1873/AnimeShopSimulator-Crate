@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using Il2CppProject.Code.Core.Services;
 using Il2CppProject.Code.Gameplay.Player.Products;
@@ -245,7 +246,9 @@ namespace AnimeShopCrate
         [HarmonyPatch]
         private static class BlockHandActions
         {
-            private static IEnumerable<System.Reflection.MethodBase> TargetMethods()
+            private static IEnumerable<System.Reflection.MethodBase> TargetMethods() => Candidates().Where(m => m != null);
+
+            private static IEnumerable<System.Reflection.MethodBase> Candidates()
             {
                 yield return AccessTools.Method(typeof(TakeItemFromProductPlaceInteraction), nameof(TakeItemFromProductPlaceInteraction.Process));
                 yield return AccessTools.Method(typeof(TakeItemFromPickupInteraction), nameof(TakeItemFromPickupInteraction.Process));

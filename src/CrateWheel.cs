@@ -25,7 +25,7 @@ namespace AnimeShopCrate
         private static void Ensure(InventoryView view)
         {
             var pie = view?._pieMenu;
-            if (pie == null || !pie.IsInitialized) return;
+            if (pie == null || !pie.IsInitialized || !Hooks.Enabled) return;
             var tracker = pie.MenuItemsTracker;
             var items = tracker?.PieMenuItems;
             if (items == null) return;

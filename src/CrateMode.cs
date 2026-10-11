@@ -27,7 +27,7 @@ namespace AnimeShopCrate
             var player = Game.LocalPlayer;
             var anim = Game.Animation(player);
             var interactions = player?._interactionsController;
-            if (anim == null || interactions == null) return;
+            if (anim == null || interactions == null || !Hooks.Enabled) return;
             if (!pickingUp && WorldCrates.HasCrateOf(player.SteamId))
             {
                 CrateInput.Say("Deine Kiste steht noch irgendwo – heb sie zuerst wieder auf.");
