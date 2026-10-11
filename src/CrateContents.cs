@@ -155,7 +155,8 @@ namespace AnimeShopCrate
                 }
             }
             // Rows fill from the far wall: tall products go to the back so they don't hide small ones.
-            return stacks.OrderByDescending(st => st.Footprint.y * st.Scale).ToList();
+            // By true height (not the figures' display bonus), rounded so products of one kind stay together.
+            return stacks.OrderByDescending(st => Mathf.Round(st.Footprint.y * 50f)).ToList();
         }
 
         // Fills rows left to right in order; a stack that does not fit starts the next row.
