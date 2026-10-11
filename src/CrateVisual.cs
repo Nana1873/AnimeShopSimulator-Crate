@@ -48,7 +48,7 @@ namespace AnimeShopCrate
                 }
                 crate = Build();
                 int layer = anchor.gameObject.layer;
-                if (!firstPerson) anchor = player.transform;
+                if (!firstPerson) anchor = BodyRoot(anchor) ?? player.transform;
                 crate.transform.SetParent(anchor, false);
                 crate.transform.localPosition = (firstPerson ? FirstPersonBase : ThirdPersonBase) + Settings.Offset(firstPerson);
                 crate.transform.localRotation = Quaternion.Euler((firstPerson ? FirstPersonTilt : Vector3.zero) + Settings.Tilt(firstPerson));
@@ -66,6 +66,14 @@ namespace AnimeShopCrate
             if (products == null) return null;
             if (firstPerson) return products._fpsPickupSlot?.transform;
             return (products._tpsPickupSlot ?? products._tpsBigPickupSlot)?.transform;
+        }
+
+        // The character root does not turn with the player; the body model below it does.
+        private static Transform BodyRoot(Transform socket)
+        {
+            for (var t = socket; t != null; t = t.parent)
+                if (t.name.StartsWith("BSMC_CharacterBase", StringComparison.Ordinal)) return t;
+            return null;
         }
 
         private static GameObject Build()
