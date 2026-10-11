@@ -37,7 +37,22 @@ namespace AnimeShopCrate
 
         internal static void Debug(string msg)
         {
-            if (DebugLog.Value) CrateMod.Log.Msg("[debug] " + msg);
+            if (!DebugLog.Value) return;
+            CrateMod.Log.Msg("[debug] " + msg);
+            Trace(msg);
+        }
+
+        /// <summary>Crash hunting: appends straight to UserData/AnimeShopCrate/trace.txt, flushed per line.</summary>
+        internal static void Trace(string msg)
+        {
+            if (!DebugLog.Value) return;
+            try
+            {
+                string dir = System.IO.Path.Combine(MelonLoader.Utils.MelonEnvironment.UserDataDirectory, "AnimeShopCrate");
+                System.IO.Directory.CreateDirectory(dir);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(dir, "trace.txt"), System.DateTime.Now.ToString("HH:mm:ss.fff ") + msg + System.Environment.NewLine);
+            }
+            catch { }
         }
     }
 }

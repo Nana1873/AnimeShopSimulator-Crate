@@ -66,7 +66,9 @@ namespace AnimeShopCrate
             bool take = !put && Pressed(mouse.rightButton);
             if (!put && !take) return;
 
+            Settings.Trace(put ? "LMB" : "RMB");
             var place = AimedPlace();
+            Settings.Trace("aimed place: " + (place == null ? "none" : place.name));
             if (place == null) { Say("Kein Regalfach oder offener Karton im Blick."); return; }
             if (take) TryTake(place);
             else TryPut(place, groups);
@@ -81,18 +83,24 @@ namespace AnimeShopCrate
 
         private static void TryTake(ProductPlace place)
         {
+            Settings.Trace("take: count " + place.Count);
             if (place.Count <= 0) { Say("Hier liegt nichts."); return; }
             var box = place._pickupProducts;
             if (box != null && !box.IsOpened) { Say("Den Karton zuerst öffnen."); return; }
+            Settings.Trace("take: resolving definition");
             var def = ProductHandsUtility.ResolveProductDefinition(AllServices.Get<ProductsService>(), place.Id);
+            Settings.Trace("take: definition " + (def == null ? "null" : def.Name + " " + def.Type));
             if (!CrateRules.Allowed(def)) { Say($"{def?.Name ?? "Das"} passt nicht in die Kiste."); return; }
             var player = Game.LocalPlayer;
             if (CrateStore.UsedSpace(player.SteamId) + CrateRules.SpaceOf(def) > CrateRules.Capacity) { Say("Die Kiste ist voll."); return; }
+            Settings.Trace("take: sending");
             CrateNet.SendPlaceCommand(place, CrateNet.CmdTake);
+            Settings.Trace("take: sent");
         }
 
         private static void TryPut(ProductPlace place, List<(CrateItem item, int count)> groups)
         {
+            Settings.Trace("put: groups " + groups.Count + ", place count " + place.Count);
             if (groups.Count == 0) { Say("Die Kiste ist leer."); return; }
             string productId;
             if (place.Count > 0)
@@ -111,7 +119,9 @@ namespace AnimeShopCrate
                 if (def != null && !place.CanPut(def.Type)) { Say("Das passt nicht in dieses Fach."); return; }
                 productId = chosen.ProductId;
             }
+            Settings.Trace("put: sending " + productId);
             CrateNet.SendPlaceCommand(place, CrateNet.CmdPut + productId);
+            Settings.Trace("put: sent");
         }
 
         private static ProductPlace AimedPlace()

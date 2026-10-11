@@ -51,7 +51,9 @@ namespace AnimeShopCrate
             var player = CrateServer.FindPlayer(steamId) ?? Game.LocalPlayer;
             var anim = Game.Animation(player);
             if (anim == null) return;
+            Settings.Trace("host: broadcasting crate " + steamId);
             anim.RpcWriter___Observers_PlayEmojiObserversRpc_3615296227(CrateStore.Serialize(steamId));
+            Settings.Trace("host: broadcast sent");
         }
 
         internal static void BroadcastAll()
@@ -65,6 +67,7 @@ namespace AnimeShopCrate
             private static bool Prefix(PlayerProductsController __instance, ProductPlace A_1, ProductTransferPayload A_2)
             {
                 if (A_2 == null || A_2.StartLayer != Marker) return true;
+                Settings.Trace("host: place command " + A_2.VariantKeychainId);
                 try
                 {
                     var player = __instance.GetComponentInParent<PlayerCharacterController>();
@@ -93,6 +96,7 @@ namespace AnimeShopCrate
             private static bool Prefix(string A_1)
             {
                 if (A_1 == null || !A_1.StartsWith(CrateStore.Prefix, StringComparison.Ordinal)) return true;
+                Settings.Trace("received crate update");
                 try { CrateStore.Apply(A_1); }
                 catch (Exception e) { CrateMod.Log.Error("crate update failed: " + e); }
                 return false;

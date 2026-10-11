@@ -41,6 +41,7 @@ namespace AnimeShopCrate
 
         private static bool Take(ulong owner, ProductPlace place)
         {
+            Settings.Trace("host take: start");
             if (place.Count <= 0) return false;
             var products = AllServices.Get<ProductsService>();
             var def = ProductHandsUtility.ResolveProductDefinition(products, place.Id);
@@ -61,7 +62,9 @@ namespace AnimeShopCrate
             else if (pricePlace != null)
             {
                 if (pricePlace.IsPlayerTakeBlocked) { Settings.Debug("take refused: slot reserved by an employee or buyer."); return false; }
+                Settings.Trace("host take: from shelf");
                 if (!pricePlace.TryTakeItemByPlayerServer(out id, out payload)) return false;
+                Settings.Trace("host take: removed from shelf");
             }
             else return false;
 
