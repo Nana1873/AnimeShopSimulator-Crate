@@ -54,6 +54,7 @@ namespace AnimeShopCrate
 
         internal static void Update()
         {
+            WatchDialog();
             var player = Game.LocalPlayer;
             if (player == null) return;
             // Ask the host for all crates once per session (late joiners see crates standing around).
@@ -161,12 +162,38 @@ namespace AnimeShopCrate
             var p = new Il2CppProject.Code.Gameplay.UI.Other.WarningView.Params();
             p.OnConfirm = (Il2CppSystem.Action)(System.Action)(() =>
             {
+                CloseDialog();
                 _confirmedTrash = can.Pointer;
                 ThrowAway(can, productId);
             });
-            p.OnRefuse = (Il2CppSystem.Action)(System.Action)(() => { });
-            try { ui.ShowWarningView(p); }
-            catch (Exception e) { Settings.Debug("confirm dialog failed: " + e.Message); ThrowAway(can, productId); }
+            p.OnRefuse = (Il2CppSystem.Action)(System.Action)(CloseDialog);
+            try
+            {
+                // Like the game: free the mouse and pause gameplay input while the dialog is open.
+                Game.LocalPlayer?._uiController?.SetUIModeActive(true);
+                _dialogOpen = true;
+                _dialogSince = Time.time;
+                ui.ShowWarningView(p);
+            }
+            catch (Exception e) { CloseDialog(); Settings.Debug("confirm dialog failed: " + e.Message); ThrowAway(can, productId); }
+        }
+
+        private static bool _dialogOpen;
+        private static float _dialogSince;
+
+        private static void CloseDialog()
+        {
+            if (!_dialogOpen) return;
+            _dialogOpen = false;
+            try { Game.LocalPlayer?._uiController?.SetUIModeActive(false); } catch { }
+        }
+
+        /// <summary>Releases the UI mode if the dialog was closed some other way (e.g. Escape).</summary>
+        private static void WatchDialog()
+        {
+            if (!_dialogOpen || Time.time - _dialogSince < 0.5f) return;
+            var view = UnityEngine.Object.FindObjectOfType<Il2CppProject.Code.Gameplay.UI.Other.WarningView>();
+            if (view == null || !view.gameObject.activeInHierarchy) CloseDialog();
         }
 
         private static void ThrowAway(Il2CppProject.Code.Gameplay.Interactions.TrashCan can, string productId)
