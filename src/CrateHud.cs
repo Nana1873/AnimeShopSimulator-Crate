@@ -5,7 +5,7 @@ namespace AnimeShopCrate
     /// <summary>Simple on-screen list of the local crate's contents while it is held.</summary>
     internal static class CrateHud
     {
-        private static GUIStyle _box, _line, _selected, _hint, _right, _center;
+        private static GUIStyle _box, _line, _selected, _hint, _right, _center, _prompt;
 
         internal static void Draw()
         {
@@ -27,6 +27,7 @@ namespace AnimeShopCrate
                 return;
             }
             Styles();
+            if (CratePlacement.Active) DrawPlacementPrompts();
 
             var groups = CrateInput.Groups();
             int used = CrateStore.UsedSpace(player.SteamId);
@@ -55,6 +56,19 @@ namespace AnimeShopCrate
             DrawHint();
         }
 
+        // Same spot and order as the game's prompts for placing a box.
+        private static void DrawPlacementPrompts()
+        {
+            float w = 170f, h = 34f, x = Screen.width - w - 40f, y = Screen.height * 0.44f;
+            string[] lines = { "LMB  Platzieren", "RMB  Abbrechen", "Mausrad  Drehen" };
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var r = new Rect(x, y + i * (h + 8f), w, h);
+                GUI.Box(r, "", _box);
+                GUI.Label(new Rect(r.x + 10, r.y, r.width - 20, r.height), lines[i], _prompt);
+            }
+        }
+
         private static void DrawHint()
         {
             if (CrateInput.Hint != null && Time.time < CrateInput.HintUntil)
@@ -80,6 +94,7 @@ namespace AnimeShopCrate
             _right = new GUIStyle(_line) { fontSize = 13, alignment = TextAnchor.MiddleRight };
             _right.normal.textColor = new Color(1f, 1f, 1f, 0.6f);
             _center = new GUIStyle(_selected) { alignment = TextAnchor.MiddleCenter, fontSize = 18 };
+            _prompt = new GUIStyle(_line) { fontSize = 17, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft };
             _hint = new GUIStyle(_line) { fontSize = 12 };
             _hint.normal.textColor = new Color(1f, 1f, 1f, 0.7f);
         }

@@ -62,9 +62,15 @@ namespace AnimeShopCrate
             AimedWorldCrate = !holding && HandsFree(player) ? WorldCrates.Aimed() : 0;
             if (!Game.CanTakeKeys()) return;
 
+            if (CratePlacement.Active)
+            {
+                if (!holding || DropKey.WasPressed()) { CratePlacement.Cancel(); return; }
+                if (CratePlacement.Update(out Vector3 at, out float facing)) SetDown(at, facing);
+                return; // clicks belong to the placement preview
+            }
             if (DropKey.WasPressed())
             {
-                if (holding) SetDown(player);
+                if (holding) CratePlacement.Begin();
                 else if (AimedWorldCrate != 0) PickUp(AimedWorldCrate);
                 return;
             }
@@ -97,18 +103,8 @@ namespace AnimeShopCrate
         private static bool HandsFree(Il2CppProject.Code.Gameplay.Player.Controllers.PlayerCharacterController player) =>
             player._interactionsController != null && player._interactionsController.CanOpenInventoryMenu;
 
-        private static void SetDown(Il2CppProject.Code.Gameplay.Player.Controllers.PlayerCharacterController player)
+        private static void SetDown(Vector3 pos, float yaw)
         {
-            var cam = Camera.main;
-            Vector3 forward = cam != null ? cam.transform.forward : player.transform.forward;
-            forward.y = 0f;
-            if (forward.sqrMagnitude < 0.01f) forward = player.transform.forward;
-            forward.Normalize();
-            Vector3 pos = player.transform.position + forward * 0.75f;
-            // Stand it on whatever is below that point (floor, or a low surface).
-            if (Physics.Raycast(pos + Vector3.up * 1.2f, Vector3.down, out RaycastHit hit, 3f, ~0, QueryTriggerInteraction.Ignore))
-                pos.y = hit.point.y;
-            float yaw = Mathf.Atan2(forward.x, forward.z) * Mathf.Rad2Deg;
             var inv = System.Globalization.CultureInfo.InvariantCulture;
             CrateNet.SendCommand(CrateNet.CmdDrop + pos.x.ToString("0.###", inv) + "," + pos.y.ToString("0.###", inv) + ","
                                  + pos.z.ToString("0.###", inv) + "," + yaw.ToString("0.#", inv));
