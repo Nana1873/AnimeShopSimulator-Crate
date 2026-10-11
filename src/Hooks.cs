@@ -95,7 +95,8 @@ namespace AnimeShopCrate
         // How many game methods a patch class targets (one per [HarmonyPatch] class, or its TargetMethods).
         private static int Expected(Type type)
         {
-            var targets = AccessTools.Method(type, "TargetMethods");
+            // Plain reflection: AccessTools logs a warning for every class without TargetMethods.
+            var targets = type.GetMethod("TargetMethods", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
             if (targets == null) return 1;
             try { return ((IEnumerable<System.Reflection.MethodBase>)targets.Invoke(null, null)).Count(); }
             catch { return 1; }
