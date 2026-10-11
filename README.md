@@ -8,11 +8,13 @@ MelonLoader mod for **Anime Shop Simulator** (IL2CPP, game v1.0.72): a crate too
 - [x] HUD list of crate contents (count + space)
 - [x] Multiplayer tested: guest/host take & put, simultaneous takes, guest crate saved by host
 - [x] Third-person crate pose (in front of the body)
-- [ ] Step 3: products visible inside the crate
-- [ ] Step 4: set the crate down / pick it up
+- [x] Products visible inside the crate (upright stacks per product, selection outline)
+- [x] Set the crate down (placement preview) / pick it up (hover outline), one crate per player
 - [x] Step 5: save/load of crate contents (sidecar file, transaction-checked)
 - [x] Count crate contents as stock for reordering
-- [ ] Real crate model
+- [x] Crate model (Blender, assets/crate.blend, embedded OBJ)
+- [x] Native game UI (prompts, warnings, panel), trash cans, per-feature hook report + version check
+- [ ] Multiplayer test of world crates, model, trash, big products
 
 ## Build
 ```
