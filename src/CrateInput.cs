@@ -69,7 +69,11 @@ namespace AnimeShopCrate
             Settings.Trace(put ? "LMB" : "RMB");
             var place = AimedPlace();
             Settings.Trace("aimed place: " + (place == null ? "none" : place.name));
-            if (place == null) { Say("Kein Regalfach oder offener Karton im Blick."); return; }
+            if (place == null)
+            {
+                if (!_aimingAtPriceTag) Say("Kein Regalfach oder offener Karton im Blick.");
+                return;
+            }
             if (take) TryTake(place);
             else TryPut(place, groups);
         }
@@ -128,16 +132,19 @@ namespace AnimeShopCrate
             Settings.Trace("put: sent");
         }
 
+        private static bool _aimingAtPriceTag;
+
         private static ProductPlace AimedPlace()
         {
+            _aimingAtPriceTag = false;
             var target = Game.LocalPlayer?._raycastController?.Interactable;
             if (target == null) return null;
             var place = target.TryCast<ProductPlace>();
             if (place != null) return place;
             var interactor = target.TryCast<ProductsPlaceInteractor>();
             if (interactor != null) return interactor.ProductPlace;
-            var price = target.TryCast<ProductPricePlace>();
-            if (price != null) return price._productPlace;
+            // Price tags stay with the game (change price / remove tag); the slot itself is the crate's.
+            if (target.TryCast<ProductPricePlace>() != null) { _aimingAtPriceTag = true; return null; }
             var box = target.TryCast<PickupProducts>();
             if (box != null) return box._productPlace;
             var comp = target.TryCast<Component>();
@@ -186,8 +193,6 @@ namespace AnimeShopCrate
                 yield return AccessTools.Method(typeof(TakeItemFromProductPlaceInteraction), nameof(TakeItemFromProductPlaceInteraction.Process));
                 yield return AccessTools.Method(typeof(TakeItemFromPickupInteraction), nameof(TakeItemFromPickupInteraction.Process));
                 yield return AccessTools.Method(typeof(ScatterShelfProductsInteraction), nameof(ScatterShelfProductsInteraction.Process));
-                yield return AccessTools.Method(typeof(ChangePriceInteraction), nameof(ChangePriceInteraction.Process));
-                yield return AccessTools.Method(typeof(ClearProductPricePlaceInteraction), nameof(ClearProductPricePlaceInteraction.Process));
             }
 
             private static bool Prefix() => !CrateMode.IsLocalActive;
