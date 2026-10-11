@@ -94,7 +94,7 @@ namespace AnimeShopCrate
             Settings.Trace("aimed place: " + (place == null ? "none" : place.name));
             if (place == null)
             {
-                if (!_aimingAtPriceTag) Say("Kein Regalfach oder offener Karton im Blick.");
+                if (!_aimingAtPriceTag) Say("Hier kann die Kiste nichts nehmen oder einräumen.");
                 return;
             }
             if (take) TryTake(place);
@@ -141,7 +141,7 @@ namespace AnimeShopCrate
             Settings.Trace("take: count " + place.Count);
             if (place.Count <= 0) { Say("Hier liegt nichts."); return; }
             var box = place._pickupProducts;
-            if (box != null && !box.IsOpened) { Say("Den Karton zuerst öffnen."); return; }
+            if (box != null && !box.IsOpened) { Say("Aus geschlossenen Kartons kann die Kiste nichts nehmen."); return; }
             Settings.Trace("take: resolving definition");
             var def = ProductHandsUtility.ResolveProductDefinition(AllServices.Get<ProductsService>(), place.Id);
             Settings.Trace("take: definition " + (def == null ? "null" : def.Name + " " + def.Type));
@@ -249,6 +249,7 @@ namespace AnimeShopCrate
                 // E ("move object") is the crate's set-down key while it is held.
                 yield return AccessTools.Method(typeof(ReplaceObjectInteraction), nameof(ReplaceObjectInteraction.Process));
                 yield return AccessTools.Method(typeof(ReplaceBattleTableInteraction), nameof(ReplaceBattleTableInteraction.Process));
+                yield return AccessTools.Method(typeof(SpawnBuildingBoxInteraction), nameof(SpawnBuildingBoxInteraction.Process));
             }
 
             private static bool Prefix() => !CrateMode.IsLocalActive;

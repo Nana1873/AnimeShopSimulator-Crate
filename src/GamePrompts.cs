@@ -77,7 +77,7 @@ namespace AnimeShopCrate
         private static readonly string[] BlockedInteractions =
         {
             "TakeItemFromProductPlaceInteraction", "TakeItemFromPickupInteraction", "ScatterShelfProductsInteraction",
-            "ReplaceObjectInteraction", "ReplaceBattleTableInteraction",
+            "ReplaceObjectInteraction", "ReplaceBattleTableInteraction", "SpawnBuildingBoxInteraction",
         };
         private static HashSet<string> _blockedMeanKeys;
 
