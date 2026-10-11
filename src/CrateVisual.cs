@@ -14,7 +14,7 @@ namespace AnimeShopCrate
     internal static class CrateVisual
     {
         // Outer size in metres.
-        internal const float Width = 0.42f, Depth = 0.30f, Height = 0.22f, Wall = 0.015f;
+        internal const float Width = CrateMesh.Width, Depth = CrateMesh.Depth, Height = CrateMesh.Height, Wall = CrateMesh.Wall;
         private static readonly Color CrateColor = new Color(0.16f, 0.45f, 0.85f);
         // Built-in pose relative to the held-item slot; the settings offsets are added on top.
         // First person: low and a bit forward, tilted towards the camera so you can look inside.
@@ -114,27 +114,28 @@ namespace AnimeShopCrate
         internal static GameObject Build()
         {
             var root = new GameObject("AnimeShopCrate_Crate");
-            float half = Wall / 2f;
-            // Bottom, then walls; the crate's origin is the centre of its bottom face.
-            Part(root, new Vector3(0, half, 0), new Vector3(Width, Wall, Depth));
-            Part(root, new Vector3(0, Height / 2f, Depth / 2f - half), new Vector3(Width, Height, Wall));
-            Part(root, new Vector3(0, Height / 2f, -Depth / 2f + half), new Vector3(Width, Height, Wall));
-            Part(root, new Vector3(Width / 2f - half, Height / 2f, 0), new Vector3(Wall, Height, Depth - 2 * Wall));
-            Part(root, new Vector3(-Width / 2f + half, Height / 2f, 0), new Vector3(Wall, Height, Depth - 2 * Wall));
+            var model = new GameObject("Model");
+            model.transform.SetParent(root.transform, false);
+            model.AddComponent<MeshFilter>().sharedMesh = CrateMesh.Get();
+            var r = model.AddComponent<MeshRenderer>();
+            var mats = new Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<Material>(2);
+            mats[0] = Material();
+            mats[1] = RimMaterial();
+            r.sharedMaterials = mats;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             return root;
         }
 
-        private static void Part(GameObject root, Vector3 pos, Vector3 size)
+        private static Material _rimMaterial;
+
+        private static Material RimMaterial()
         {
-            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            var col = cube.GetComponent<Collider>();
-            if (col != null) Object.Destroy(col);
-            cube.transform.SetParent(root.transform, false);
-            cube.transform.localPosition = pos;
-            cube.transform.localScale = size;
-            var r = cube.GetComponent<MeshRenderer>();
-            r.sharedMaterial = Material();
-            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            if (_rimMaterial != null) return _rimMaterial;
+            _rimMaterial = new Material(Material()) { name = "AnimeShopCrate_PlasticRim" };
+            var rim = Color.Lerp(CrateColor, Color.white, 0.18f);
+            if (_rimMaterial.HasProperty("_BaseColor")) _rimMaterial.SetColor("_BaseColor", rim);
+            if (_rimMaterial.HasProperty("_Color")) _rimMaterial.SetColor("_Color", rim);
+            return _rimMaterial;
         }
 
         private static Material Material()

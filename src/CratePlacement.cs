@@ -30,7 +30,12 @@ namespace AnimeShopCrate
             {
                 _ghost = CrateVisual.Build();
                 _ghost.name = "AnimeShopCrate_PlacementPreview";
-                foreach (var r in _ghost.GetComponentsInChildren<MeshRenderer>(true)) r.sharedMaterial = GhostMaterial();
+                foreach (var r in _ghost.GetComponentsInChildren<MeshRenderer>(true))
+                {
+                    var mats = new Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<Material>(r.sharedMaterials.Length);
+                    for (int i = 0; i < mats.Length; i++) mats[i] = GhostMaterial();
+                    r.sharedMaterials = mats;
+                }
             }
             _ghost.SetActive(true);
         }
