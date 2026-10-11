@@ -4,6 +4,7 @@ using System.Text;
 using HarmonyLib;
 using Il2CppProject.Code.Core.Saves;
 using Il2CppProject.Code.Core.Services;
+using Il2CppProject.Code.Gameplay.Controllers;
 using Il2CppProject.Code.Gameplay.Services;
 using MelonLoader.Utils;
 
@@ -55,7 +56,7 @@ namespace AnimeShopCrate
 
             string[] lines = File.ReadAllLines(file, Encoding.UTF8);
             if (lines.Length == 0) return;
-            save.TryGetCommittedTransactionId(slot, out string committed);
+            string committed = CommittedTransactionId(slot);
             if (!string.Equals(lines[0], committed, StringComparison.OrdinalIgnoreCase))
             {
                 CrateMod.Log.Warning($"crate file for slot {slot} belongs to a different save (file {lines[0]}, save {committed}); not loaded.");
@@ -68,6 +69,22 @@ namespace AnimeShopCrate
             CrateNet.BroadcastAll();
         }
 
+        // Read from the slot file instead of SaveService.TryGetCommittedTransactionId: calling
+        // game methods with out-parameters through the interop layer has crashed the game.
+        private static string CommittedTransactionId(int slot)
+        {
+            try
+            {
+                string file = Path.Combine(UnityEngine.Application.persistentDataPath, $"{slot}_save.es3");
+                if (!File.Exists(file)) return null;
+                string text = File.ReadAllText(file);
+                var m = System.Text.RegularExpressions.Regex.Match(text,
+                    @"""sessionSaveTransactionId""\s*:\s*\{[^}]*?""value""\s*:\s*""([0-9a-fA-F]+)""");
+                return m.Success ? m.Groups[1].Value : null;
+            }
+            catch (Exception e) { CrateMod.Log.Warning("reading the save's transaction id failed: " + e.Message); return null; }
+        }
+
         private static string Snapshot()
         {
             var sb = new StringBuilder();
@@ -76,16 +93,21 @@ namespace AnimeShopCrate
             return sb.ToString();
         }
 
-        [HarmonyPatch(typeof(SaveService), nameof(SaveService.TryPrepareSessionSave))]
-        private static class PreparePatch
+        // Snapshot while the game collects its save data (main thread). Not hooked on
+        // SaveService.TryPrepareSessionSave itself: patching its struct out-parameter crashes the game.
+        // OrderController is one of the save components that method calls.
+        [HarmonyPatch(typeof(OrderController), nameof(OrderController.Save))]
+        private static class SnapshotPatch
         {
-            private static void Postfix(SaveService __instance, bool __result)
+            private static void Postfix()
             {
-                if (!__result) return;
                 try
                 {
+                    var save = AllServices.Get<SaveService>();
+                    if (save == null || !save.HasSessionWriteAuthority) return;
                     _pending = Snapshot();
-                    _pendingSlot = __instance.SlotNumberActive;
+                    _pendingSlot = save.SlotNumberActive;
+                    Settings.Trace($"crate snapshot for slot {_pendingSlot}");
                 }
                 catch (Exception e) { CrateMod.Log.Error("crate snapshot failed: " + e); }
             }
@@ -107,6 +129,7 @@ namespace AnimeShopCrate
                     if (File.Exists(file)) File.Replace(tmp, file, file + ".bak");
                     else File.Move(tmp, file);
                     _pending = null;
+                    Settings.Trace($"crate file written for slot {slotNumber}");
                 }
                 catch (Exception e) { CrateMod.Log.Error("writing the crate file failed: " + e); }
             }
