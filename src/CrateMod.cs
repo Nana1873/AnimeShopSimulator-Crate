@@ -40,6 +40,7 @@ namespace AnimeShopCrate
             WorldCrates.Reset();
             DropKey.Reset();
             CratePlacement.Reset();
+            CrateOutline.Reset();
         }
     }
 }

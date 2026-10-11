@@ -33,7 +33,11 @@ namespace AnimeShopCrate
         internal static IEnumerable<int> Ids => Crates.Keys;
 
         /// <summary>Scene change: the visuals are gone with the scene; the host reloads the data from the save.</summary>
-        internal static void Reset() => Crates.Clear();
+        internal static void Reset()
+        {
+            Crates.Clear();
+            _hovered = 0;
+        }
 
         internal static int ItemCount(int id) => Crates.TryGetValue(id, out var c) ? c.Items.Count : 0;
 
@@ -140,10 +144,23 @@ namespace AnimeShopCrate
             {
                 c.Visual = CrateVisual.Build();
                 c.Visual.name = "AnimeShopCrate_WorldCrate_" + c.Id;
+                CrateOutline.Attach(c.Visual);
             }
             c.Visual.transform.position = c.Position;
             c.Visual.transform.rotation = Quaternion.Euler(0f, c.Yaw, 0f);
             CrateContents.Fill(c.Visual, c.Items);
+            CrateOutline.Refresh(c.Visual);
+        }
+
+        private static int _hovered;
+
+        /// <summary>Outline the aimed crate (0 = none).</summary>
+        internal static void SetHovered(int id)
+        {
+            if (id == _hovered) return;
+            if (Crates.TryGetValue(_hovered, out var old)) CrateOutline.Set(old.Visual, false);
+            _hovered = id;
+            if (Crates.TryGetValue(id, out var c)) CrateOutline.Set(c.Visual, true);
         }
 
         /// <summary>The world crate the camera looks at within reach, or 0.</summary>

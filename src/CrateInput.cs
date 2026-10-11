@@ -60,6 +60,7 @@ namespace AnimeShopCrate
 
             bool holding = CrateMode.IsLocalActive;
             AimedWorldCrate = !holding && HandsFree(player) ? WorldCrates.Aimed() : 0;
+            WorldCrates.SetHovered(AimedWorldCrate);
             if (!Game.CanTakeKeys()) return;
 
             if (CratePlacement.Active)
