@@ -78,6 +78,8 @@ namespace AnimeShopCrate
         {
             "TakeItemFromProductPlaceInteraction", "TakeItemFromPickupInteraction", "ScatterShelfProductsInteraction",
             "ReplaceObjectInteraction", "ReplaceBattleTableInteraction", "SpawnBuildingBoxInteraction",
+            "EnterStayPointInteraction", "BattleTableInteraction", "EnterOutfitChangeInteraction",
+            "ClaimAutoOpenerInteraction", "StartAutoOpenerInteraction", "ToggleCloseOpenSignInteraction",
         };
         private static HashSet<string> _blockedMeanKeys;
 

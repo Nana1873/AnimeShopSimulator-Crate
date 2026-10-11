@@ -95,7 +95,8 @@ namespace AnimeShopCrate
             Settings.Trace("aimed place: " + (place == null ? "none" : place.name));
             if (place == null)
             {
-                if (!_aimingAtPriceTag) Say("Hier kann die Kiste nichts nehmen oder einräumen.");
+                // Only complain at shelves and boxes; a click on a computer, door etc. is not meant for the crate.
+                if (_aimingAtStorage) Say("Hier kann die Kiste nichts nehmen oder einräumen.");
                 return;
             }
             if (take) TryTake(place);
@@ -184,11 +185,11 @@ namespace AnimeShopCrate
             Settings.Trace("put: sent");
         }
 
-        private static bool _aimingAtPriceTag;
+        private static bool _aimingAtStorage;
 
         private static ProductPlace AimedPlace()
         {
-            _aimingAtPriceTag = false;
+            _aimingAtStorage = false;
             var target = Game.LocalPlayer?._raycastController?.Interactable;
             if (target == null) return null;
             var place = target.TryCast<ProductPlace>();
@@ -196,7 +197,7 @@ namespace AnimeShopCrate
             var interactor = target.TryCast<ProductsPlaceInteractor>();
             if (interactor != null) return interactor.ProductPlace;
             // Price tags stay with the game (change price / remove tag); the slot itself is the crate's.
-            if (target.TryCast<ProductPricePlace>() != null) { _aimingAtPriceTag = true; return null; }
+            if (target.TryCast<ProductPricePlace>() != null) return null;
             var box = target.TryCast<PickupProducts>();
             if (box != null) return box._productPlace;
             var comp = target.TryCast<Component>();
@@ -205,6 +206,8 @@ namespace AnimeShopCrate
             // Empty slots are not hit by the hands' raycast; the shelf behind them is.
             // Take the shelf's slot nearest to the point you look at.
             if (found == null && comp != null) found = NearestSlot(comp, Game.LocalPlayer._raycastController);
+            if (found == null && comp != null)
+                _aimingAtStorage = comp.GetComponentInParent<PickupProducts>() != null || comp.GetComponentInChildren<ProductPlace>(true) != null;
             if (found == null)
                 Settings.Debug("aimed at an unsupported object: " + target.Cast<Il2CppSystem.Object>().GetIl2CppType().FullName
                     + (comp != null ? $" ('{comp.name}')" : ""));
@@ -251,6 +254,13 @@ namespace AnimeShopCrate
                 yield return AccessTools.Method(typeof(ReplaceObjectInteraction), nameof(ReplaceObjectInteraction.Process));
                 yield return AccessTools.Method(typeof(ReplaceBattleTableInteraction), nameof(ReplaceBattleTableInteraction.Process));
                 yield return AccessTools.Method(typeof(SpawnBuildingBoxInteraction), nameof(SpawnBuildingBoxInteraction.Process));
+                // Like the game's tools (mop, bat): no computer/register, battle table, wardrobe, auto opener or shop sign.
+                yield return AccessTools.Method(typeof(EnterStayPointInteraction), nameof(EnterStayPointInteraction.Process));
+                yield return AccessTools.Method(typeof(BattleTableInteraction), nameof(BattleTableInteraction.Process));
+                yield return AccessTools.Method(typeof(EnterOutfitChangeInteraction), nameof(EnterOutfitChangeInteraction.Process));
+                yield return AccessTools.Method(typeof(ClaimAutoOpenerInteraction), nameof(ClaimAutoOpenerInteraction.Process));
+                yield return AccessTools.Method(typeof(StartAutoOpenerInteraction), nameof(StartAutoOpenerInteraction.Process));
+                yield return AccessTools.Method(typeof(ToggleCloseOpenSignInteraction), nameof(ToggleCloseOpenSignInteraction.Process));
             }
 
             private static bool Prefix() => !CrateMode.IsLocalActive;
