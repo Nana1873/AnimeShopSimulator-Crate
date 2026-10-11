@@ -32,6 +32,10 @@ namespace AnimeShopCrate
         {
             _synced = false;
             Selected = 0;
+            // The scene is gone, and the game resets its own UI mode with it.
+            _dialogOpen = false;
+            _confirmedTrash = System.IntPtr.Zero;
+            _confirmedUntil = 0f;
         }
 
         /// <summary>Distinct products in the local crate, in order of first appearance, with counts.</summary>
@@ -135,6 +139,7 @@ namespace AnimeShopCrate
 
         internal static void ClearTrashAim()
         {
+            _confirmedTrash = System.IntPtr.Zero;
             if (AimedTrash == null) return;
             try { AimedTrash.EnableLook(false); } catch { }
             AimedTrash = null;
@@ -175,7 +180,7 @@ namespace AnimeShopCrate
                 _dialogSince = Time.time;
                 ui.ShowWarningView(p);
             }
-            catch (Exception e) { CloseDialog(); Settings.Debug("confirm dialog failed: " + e.Message); ThrowAway(can, productId); }
+            catch (Exception e) { CloseDialog(); CrateMod.Log.Warning("The confirm dialog could not open, throwing away without asking: " + e.Message); ThrowAway(can, productId); }
         }
 
         private static bool _dialogOpen;
