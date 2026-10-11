@@ -4,7 +4,7 @@ A MelonLoader mod for **Anime Shop Simulator** that adds a shopping crate, like 
 
 Works in single player and co-op (both players need the mod).
 
-> **Status: beta.** Tested on game version 1.0.72 in single player and co-op. Standing crates, the crate model and throwing products away are not yet tested in co-op.
+> **Version 1.0.0.** Tested on game version 1.0.72 in single player and co-op, including standing crates, throwing products away and saving.
 
 ## Features
 
