@@ -161,6 +161,36 @@ namespace AnimeShopCrate
                 "這個放不進這個格子。", "這個格子已滿。", "你的箱子還放在某處——請先拿起它。",
                 "{0}放不進箱子。", "箱子", "收集並上架商品",
             },
+            ["cs"] = new[]
+            {
+                "Doplnit", "Do přepravky", "Vyhodit", "Vybrat produkt", "Položit přepravku", "Umístit", "Zrušit", "Otočit", "Zvednout přepravku",
+                "Přepravka", "produktů", "Místo", "prázdná – pravým klikem na přihrádku",
+                "Tady přepravka nemůže nic vzít ani doplnit.", "Přepravka je prázdná.", "Vyhazování produktů je v této lobby vypnuté.",
+                "Tvoje přepravka není prázdná – nejdřív ji vyprázdni nebo polož.", "To je přepravka jiného hráče.", "Nic tu není.",
+                "Z uzavřených krabic přepravka nic nevezme.", "Přepravka je plná.", "V této přihrádce je jiný produkt.",
+                "To se do této přihrádky nevejde.", "Přihrádka je plná.", "Tvoje přepravka ještě někde stojí – nejdřív ji zvedni.",
+                "{0} se do přepravky nevejde.", "Přepravka", "Sbírej a doplňuj produkty",
+            },
+            ["sv"] = new[]
+            {
+                "Fyll på", "I backen", "Släng", "Välj produkt", "Ställ ner backen", "Placera", "Avbryt", "Rotera", "Plocka upp backen",
+                "Back", "produkter", "Plats", "tom – högerklicka på en hyllplats",
+                "Backen kan inte ta eller fylla på något här.", "Backen är tom.", "Att slänga produkter är avstängt i den här lobbyn.",
+                "Din back är inte tom – töm den eller ställ ner den först.", "Det är en annan spelares back.", "Här finns inget.",
+                "Backen kan inte ta från stängda lådor.", "Backen är full.", "Den här platsen har en annan produkt.",
+                "Det får inte plats på den här platsen.", "Den här platsen är full.", "Din back står fortfarande någonstans – plocka upp den först.",
+                "{0} får inte plats i backen.", "Back", "Samla och fyll på produkter",
+            },
+            ["vi"] = new[]
+            {
+                "Xếp lên kệ", "Bỏ vào thùng", "Vứt bỏ", "Chọn sản phẩm", "Đặt thùng xuống", "Đặt", "Hủy", "Xoay", "Nhặt thùng",
+                "Thùng", "sản phẩm", "Chỗ", "trống – nhấp chuột phải vào một ô kệ",
+                "Thùng không thể lấy hoặc xếp gì ở đây.", "Thùng đang trống.", "Vứt bỏ sản phẩm đã bị tắt trong phòng này.",
+                "Thùng của bạn chưa trống – hãy dọn trống hoặc đặt xuống trước.", "Đây là thùng của người chơi khác.", "Ở đây không có gì.",
+                "Thùng không thể lấy từ hộp chưa mở.", "Thùng đã đầy.", "Ô này chứa sản phẩm khác.",
+                "Món này không vừa ô này.", "Ô này đã đầy.", "Thùng của bạn vẫn đang đặt ở đâu đó – hãy nhặt nó lên trước.",
+                "{0} không vừa thùng.", "Thùng", "Thu gom và xếp sản phẩm lên kệ",
+            },
         };
 
         private static bool _logged;

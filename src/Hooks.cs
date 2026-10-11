@@ -7,7 +7,7 @@ namespace AnimeShopCrate
 {
     /// <summary>
     /// Applies the Harmony patches feature by feature and reports each one, like
-    /// "[Save] hooked 4/4 game methods". If a critical feature cannot hook into the game (usually
+    /// "[Save] hooked 3/4 game methods" when something is missing, otherwise one summary line. If a critical feature cannot hook into the game (usually
     /// after a game update renamed a method), the whole crate turns off so no products can be lost.
     /// </summary>
     internal static class Hooks
@@ -49,11 +49,13 @@ namespace AnimeShopCrate
                 .GroupBy(t => t.DeclaringType);
 
             var failedCritical = new List<string>();
+            int okParts = 0, okMethods = 0, parts = 0;
             foreach (var group in patchClasses)
             {
                 Features.TryGetValue(group.Key, out var feature);
                 string name = feature?.Name ?? group.Key.Name;
                 int hooked = 0, total = 0;
+                parts++;
                 var errors = new List<string>();
                 foreach (var type in group)
                 {
@@ -70,7 +72,9 @@ namespace AnimeShopCrate
                 }
                 if (errors.Count == 0 && hooked >= total)
                 {
-                    CrateMod.Log.Msg($"[{name}] hooked {hooked}/{total} game methods.");
+                    okParts++;
+                    okMethods += hooked;
+                    Settings.Debug($"[{name}] hooked {hooked}/{total} game methods.");
                     continue;
                 }
                 string detail = string.Join("; ", errors);
@@ -84,6 +88,11 @@ namespace AnimeShopCrate
                     CrateMod.Log.Warning($"[{name}] hooked {hooked}/{total} game methods: {detail}. This part may not work; the rest of the crate does.");
                 }
             }
+
+            if (okParts == parts)
+                CrateMod.Log.Msg($"All {parts} parts hooked into the game ({okMethods} methods).");
+            else
+                CrateMod.Log.Msg($"{okParts} of {parts} parts hooked into the game; see above for the rest.");
 
             if (failedCritical.Count > 0)
             {

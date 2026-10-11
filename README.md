@@ -20,7 +20,7 @@ Works in single player and co-op (both players need the mod).
 - **Saved with your game**, including standing crates and your co-op partner's crate.
 - **Counts as stock**: products in crates still count for the order computer and reorder helpers.
 - **Game-style UI**: native key prompts, warnings and a crate panel with product icons.
-- **Translated** into English, German, French, Spanish, Italian, Portuguese, Russian, Ukrainian, Polish, Turkish, Japanese, Korean and Chinese (simplified and traditional), following the game's language.
+- **Translated** into all of the game's languages – English, German, French, Spanish, Italian, Portuguese, Russian, Polish, Czech, Swedish, Turkish, Vietnamese, Japanese, Korean and Chinese – plus Ukrainian and traditional Chinese, following the game's language.
 - While you hold the crate, the things the game's tools cannot do are blocked too (computer, register, battle table, wardrobe, moving or packing furniture).
 
 ## Installation
