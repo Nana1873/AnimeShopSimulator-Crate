@@ -22,6 +22,18 @@ namespace AnimeShopCrate
         internal const string CmdTake = "take";
         internal const string CmdPut = "put:";
         internal const string CmdSync = "ASC1|sync";
+        internal const string CmdDrop = "ASC1|drop|";     // + x,y,z,yaw
+        internal const string CmdPickUp = "ASC1|pickup|"; // + world crate id
+        private const string AnyPrefix = "ASC1";
+
+        private static bool IsOurs(string text) => text != null && text.StartsWith(AnyPrefix, StringComparison.Ordinal);
+
+        /// <summary>Routes a host message to the player crates or the world crates.</summary>
+        private static void Receive(string text)
+        {
+            Settings.Trace("received " + (text.Length > 40 ? text.Substring(0, 40) + "…" : text));
+            if (!WorldCrates.Apply(text)) CrateStore.Apply(text);
+        }
 
         // ---------- client side ----------
 
@@ -39,10 +51,12 @@ namespace AnimeShopCrate
             products.RpcWriter___Server_AddProductItemRpc_4187530933(place, payload);
         }
 
-        internal static void RequestSync()
+        internal static void RequestSync() => SendCommand(CmdSync);
+
+        internal static void SendCommand(string command)
         {
             var anim = Game.Animation(Game.LocalPlayer);
-            anim?.RpcWriter___Server_PlayEmojiServer_3615296227(CmdSync);
+            anim?.RpcWriter___Server_PlayEmojiServer_3615296227(command);
         }
 
         // ---------- host side ----------
@@ -57,9 +71,18 @@ namespace AnimeShopCrate
             Settings.Trace("host: broadcast sent");
         }
 
+        /// <summary>Host: sends a message to every player (through the host's own player).</summary>
+        internal static void BroadcastText(string text)
+        {
+            var anim = Game.Animation(Game.LocalPlayer);
+            if (anim == null || text == null) return;
+            anim.RpcWriter___Observers_PlayEmojiObserversRpc_3615296227(text);
+        }
+
         internal static void BroadcastAll()
         {
             foreach (ulong id in CrateStore.Owners) Broadcast(id);
+            WorldCrates.BroadcastAll();
         }
 
         [HarmonyPatch(typeof(PlayerProductsController), nameof(PlayerProductsController.RpcLogic___AddProductItemRpc_4187530933))]
@@ -82,11 +105,27 @@ namespace AnimeShopCrate
         [HarmonyPatch(typeof(PlayerAnimationController), nameof(PlayerAnimationController.RpcLogic___PlayEmojiServer_3615296227))]
         private static class ServerStringPatch
         {
-            private static bool Prefix(string A_1)
+            private static bool Prefix(PlayerAnimationController __instance, string A_1)
             {
-                if (A_1 == null || !A_1.StartsWith(CrateStore.Prefix, StringComparison.Ordinal)) return true;
-                try { if (A_1 == CmdSync) BroadcastAll(); }
-                catch (Exception e) { CrateMod.Log.Error("crate sync failed on the host: " + e); }
+                if (!IsOurs(A_1)) return true;
+                try
+                {
+                    var player = __instance.GetComponentInParent<PlayerCharacterController>();
+                    if (A_1 == CmdSync) BroadcastAll();
+                    else if (player != null && A_1.StartsWith(CmdDrop, StringComparison.Ordinal))
+                    {
+                        var f = A_1.Substring(CmdDrop.Length).Split(',');
+                        var inv = System.Globalization.CultureInfo.InvariantCulture;
+                        if (f.Length >= 4)
+                            WorldCrates.HostDrop(player,
+                                new UnityEngine.Vector3(float.Parse(f[0], inv), float.Parse(f[1], inv), float.Parse(f[2], inv)),
+                                float.Parse(f[3], inv));
+                    }
+                    else if (player != null && A_1.StartsWith(CmdPickUp, StringComparison.Ordinal)
+                             && int.TryParse(A_1.Substring(CmdPickUp.Length), out int id))
+                        WorldCrates.HostPickUp(player, id);
+                }
+                catch (Exception e) { CrateMod.Log.Error("crate command failed on the host: " + e); }
                 return false;
             }
         }
@@ -101,10 +140,9 @@ namespace AnimeShopCrate
             {
                 if (PooledReader0 == null) return true;
                 string text = PooledReader0.ReadString();
-                if (text != null && text.StartsWith(CrateStore.Prefix, StringComparison.Ordinal))
+                if (IsOurs(text))
                 {
-                    Settings.Trace("received crate update");
-                    try { CrateStore.Apply(text); }
+                    try { Receive(text); }
                     catch (Exception e) { CrateMod.Log.Error("crate update failed: " + e); }
                 }
                 else
@@ -120,9 +158,8 @@ namespace AnimeShopCrate
         {
             private static bool Prefix(string A_1)
             {
-                if (A_1 == null || !A_1.StartsWith(CrateStore.Prefix, StringComparison.Ordinal)) return true;
-                Settings.Trace("received crate update");
-                try { CrateStore.Apply(A_1); }
+                if (!IsOurs(A_1)) return true;
+                try { Receive(A_1); }
                 catch (Exception e) { CrateMod.Log.Error("crate update failed: " + e); }
                 return false;
             }

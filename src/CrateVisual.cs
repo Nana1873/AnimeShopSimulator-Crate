@@ -14,7 +14,7 @@ namespace AnimeShopCrate
     internal static class CrateVisual
     {
         // Outer size in metres.
-        private const float Width = 0.42f, Depth = 0.30f, Height = 0.22f, Wall = 0.015f;
+        internal const float Width = 0.42f, Depth = 0.30f, Height = 0.22f, Wall = 0.015f;
         private static readonly Color CrateColor = new Color(0.16f, 0.45f, 0.85f);
         // Built-in pose relative to the held-item slot; the settings offsets are added on top.
         // First person: low and a bit forward, tilted towards the camera so you can look inside.
@@ -25,14 +25,34 @@ namespace AnimeShopCrate
         // The game's third-person product socket sits on the left hand bone and swings with the arm.
         private static readonly Vector3 ThirdPersonBase = new Vector3(0f, 1.0f, 0.27f);
 
-        private static readonly Dictionary<IntPtr, GameObject> Crates = new();
+        private sealed class Held
+        {
+            internal GameObject Crate;
+            internal ulong Owner;
+        }
+
+        private static readonly Dictionary<IntPtr, Held> Crates = new();
+
+        internal static void Reset() => Crates.Clear();
+
+        /// <summary>Rebuilds the contents of every held crate of this player (called when the crate changes).</summary>
+        internal static void Refresh(ulong owner)
+        {
+            foreach (var h in Crates.Values)
+                if (h.Crate != null && h.Owner == owner)
+                {
+                    CrateContents.Fill(h.Crate, CrateStore.Get(owner));
+                    SetLayer(h.Crate.transform, h.Crate.layer);
+                }
+        }
         private static Material _material;
 
         internal static void Set(PlayerAnimationController anim, bool visible)
         {
             if (anim == null) return;
             IntPtr key = anim.Pointer;
-            Crates.TryGetValue(key, out var crate);
+            Crates.TryGetValue(key, out var held);
+            var crate = held?.Crate;
             if (crate == null && !visible) return;
 
             if (crate == null)
@@ -53,8 +73,9 @@ namespace AnimeShopCrate
                 crate.transform.localPosition = (firstPerson ? FirstPersonBase : ThirdPersonBase) + Settings.Offset(firstPerson);
                 crate.transform.localRotation = Quaternion.Euler((firstPerson ? FirstPersonTilt : Vector3.zero) + Settings.Tilt(firstPerson));
                 crate.transform.localScale = Vector3.one * (firstPerson ? FirstPersonScale : 1f) * Settings.Scale.Value;
+                CrateContents.Fill(crate, CrateStore.Get(player.SteamId));
                 SetLayer(crate.transform, layer);
-                Crates[key] = crate;
+                Crates[key] = new Held { Crate = crate, Owner = player.SteamId };
                 Settings.Debug($"crate model created under '{Path(anchor)}' (layer {layer}, {(firstPerson ? "first" : "third")} person, root scale {player.transform.lossyScale}).");
             }
             crate.SetActive(visible);
@@ -76,7 +97,7 @@ namespace AnimeShopCrate
             return null;
         }
 
-        private static GameObject Build()
+        internal static GameObject Build()
         {
             var root = new GameObject("AnimeShopCrate_Crate");
             float half = Wall / 2f;
@@ -120,7 +141,7 @@ namespace AnimeShopCrate
             return _material = new Material(Shader.Find("Hidden/InternalErrorShader"));
         }
 
-        private static void SetLayer(Transform t, int layer)
+        internal static void SetLayer(Transform t, int layer)
         {
             t.gameObject.layer = layer;
             for (int i = 0; i < t.childCount; i++) SetLayer(t.GetChild(i), layer);

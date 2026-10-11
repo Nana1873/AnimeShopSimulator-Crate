@@ -14,6 +14,7 @@ namespace AnimeShopCrate
         {
             Log = LoggerInstance;
             Settings.Init();
+            CrateStore.Changed += CrateVisual.Refresh;
             // Harmony attributes in this assembly are applied by MelonLoader automatically.
             Log.Msg("Anime Shop Crate loaded. Q wheel slot 6 / key 6 = crate.");
         }
@@ -35,6 +36,9 @@ namespace AnimeShopCrate
             Game.Reset();
             CrateInput.Reset();
             CrateSave.ResetScene();
+            CrateVisual.Reset();
+            WorldCrates.Reset();
+            DropKey.Reset();
         }
     }
 }

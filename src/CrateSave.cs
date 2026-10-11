@@ -52,6 +52,7 @@ namespace AnimeShopCrate
             int slot = save.SlotNumberActive;
             string file = FileFor(slot);
             CrateStore.Clear();
+            WorldCrates.Reset();
             if (!File.Exists(file)) { Settings.Debug($"no crate file for slot {slot}."); return; }
 
             string[] lines = File.ReadAllLines(file, Encoding.UTF8);
@@ -64,7 +65,7 @@ namespace AnimeShopCrate
             }
             int crates = 0;
             for (int i = 1; i < lines.Length; i++)
-                if (CrateStore.Apply(lines[i])) crates++;
+                if (WorldCrates.Apply(lines[i]) || CrateStore.Apply(lines[i])) crates++;
             CrateMod.Log.Msg($"loaded {crates} crate(s) for slot {slot}.");
             CrateNet.BroadcastAll();
         }
@@ -90,6 +91,7 @@ namespace AnimeShopCrate
             var sb = new StringBuilder();
             foreach (ulong id in CrateStore.Owners)
                 if (CrateStore.Get(id).Count > 0) sb.Append(CrateStore.Serialize(id)).Append('\n');
+            WorldCrates.AppendSave(sb);
             return sb.ToString();
         }
 

@@ -48,11 +48,27 @@ namespace AnimeShopCrate
             return result;
         }
 
+        /// <summary>World crate under the crosshair while the hands are free (0 = none), for the HUD.</summary>
+        internal static int AimedWorldCrate;
+
         internal static void Update()
         {
-            if (!CrateMode.IsLocalActive) return;
+            var player = Game.LocalPlayer;
+            if (player == null) return;
+            // Ask the host for all crates once per session (late joiners see crates standing around).
             if (!_synced) { _synced = true; CrateNet.RequestSync(); }
+
+            bool holding = CrateMode.IsLocalActive;
+            AimedWorldCrate = !holding && HandsFree(player) ? WorldCrates.Aimed() : 0;
             if (!Game.CanTakeKeys()) return;
+
+            if (DropKey.WasPressed())
+            {
+                if (holding) SetDown(player);
+                else if (AimedWorldCrate != 0) PickUp(AimedWorldCrate);
+                return;
+            }
+            if (!holding) return;
             var mouse = Mouse.current;
             if (mouse == null) return;
 
@@ -76,6 +92,39 @@ namespace AnimeShopCrate
             }
             if (take) TryTake(place);
             else TryPut(place, groups);
+        }
+
+        private static bool HandsFree(Il2CppProject.Code.Gameplay.Player.Controllers.PlayerCharacterController player) =>
+            player._interactionsController != null && player._interactionsController.CanOpenInventoryMenu;
+
+        private static void SetDown(Il2CppProject.Code.Gameplay.Player.Controllers.PlayerCharacterController player)
+        {
+            var cam = Camera.main;
+            Vector3 forward = cam != null ? cam.transform.forward : player.transform.forward;
+            forward.y = 0f;
+            if (forward.sqrMagnitude < 0.01f) forward = player.transform.forward;
+            forward.Normalize();
+            Vector3 pos = player.transform.position + forward * 0.75f;
+            // Stand it on whatever is below that point (floor, or a low surface).
+            if (Physics.Raycast(pos + Vector3.up * 1.2f, Vector3.down, out RaycastHit hit, 3f, ~0, QueryTriggerInteraction.Ignore))
+                pos.y = hit.point.y;
+            float yaw = Mathf.Atan2(forward.x, forward.z) * Mathf.Rad2Deg;
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            CrateNet.SendCommand(CrateNet.CmdDrop + pos.x.ToString("0.###", inv) + "," + pos.y.ToString("0.###", inv) + ","
+                                 + pos.z.ToString("0.###", inv) + "," + yaw.ToString("0.#", inv));
+            CrateMode.Exit();
+        }
+
+        private static void PickUp(int id)
+        {
+            var player = Game.LocalPlayer;
+            if (CrateStore.Get(player.SteamId).Count > 0)
+            {
+                Say("Deine Kiste ist nicht leer – erst ausräumen oder abstellen.");
+                return;
+            }
+            CrateMode.Enter();
+            CrateNet.SendCommand(CrateNet.CmdPickUp + id.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
         private static bool Pressed(UnityEngine.InputSystem.Controls.ButtonControl button)

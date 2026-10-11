@@ -5,13 +5,24 @@ namespace AnimeShopCrate
     /// <summary>Simple on-screen list of the local crate's contents while it is held.</summary>
     internal static class CrateHud
     {
-        private static GUIStyle _box, _line, _selected, _hint, _right;
+        private static GUIStyle _box, _line, _selected, _hint, _right, _center;
 
         internal static void Draw()
         {
-            if (!CrateMode.IsLocalActive) return;
             var player = Game.LocalPlayer;
             if (player == null) return;
+            if (!CrateMode.IsLocalActive)
+            {
+                if (CrateInput.AimedWorldCrate != 0)
+                {
+                    Styles();
+                    int n = WorldCrates.ItemCount(CrateInput.AimedWorldCrate);
+                    GUI.Label(new Rect(Screen.width / 2f - 300, Screen.height * 0.56f, 600, 30),
+                        $"[{DropKey.Label}] Kiste aufheben ({n} {(n == 1 ? "Produkt" : "Produkte")})", _center);
+                }
+                DrawHint();
+                return;
+            }
             Styles();
 
             var groups = CrateInput.Groups();
@@ -35,10 +46,17 @@ namespace AnimeShopCrate
                 GUI.Label(row, $"{(sel ? "▶ " : "   ")}{groups[i].count}× {name}", sel ? _selected : _line);
                 GUI.Label(row, $"{space} Platz", _right);
             }
-            GUI.Label(new Rect(x + 12, y + h - 26, w - 24, lineH), "LMB einräumen · RMB nehmen · Mausrad wählen", _hint);
+            GUI.Label(new Rect(x + 12, y + h - 26, w - 24, lineH), $"LMB einräumen · RMB nehmen · Mausrad wählen · {DropKey.Label} abstellen", _hint);
+            DrawHint();
+        }
 
+        private static void DrawHint()
+        {
             if (CrateInput.Hint != null && Time.time < CrateInput.HintUntil)
-                GUI.Label(new Rect(Screen.width / 2f - 300, Screen.height * 0.62f, 600, 30), CrateInput.Hint, _selected);
+            {
+                Styles();
+                GUI.Label(new Rect(Screen.width / 2f - 300, Screen.height * 0.62f, 600, 30), CrateInput.Hint, _center);
+            }
         }
 
         private static void Styles()
@@ -56,6 +74,7 @@ namespace AnimeShopCrate
             _selected.normal.textColor = new Color(1f, 0.85f, 0.45f);
             _right = new GUIStyle(_line) { fontSize = 13, alignment = TextAnchor.MiddleRight };
             _right.normal.textColor = new Color(1f, 1f, 1f, 0.6f);
+            _center = new GUIStyle(_selected) { alignment = TextAnchor.MiddleCenter, fontSize = 18 };
             _hint = new GUIStyle(_line) { fontSize = 12 };
             _hint.normal.textColor = new Color(1f, 1f, 1f, 0.7f);
         }
