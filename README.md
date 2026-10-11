@@ -11,7 +11,7 @@ MelonLoader mod for **Anime Shop Simulator** (IL2CPP, game v1.0.72): a crate too
 - [ ] Step 3: products visible inside the crate
 - [ ] Step 4: set the crate down / pick it up
 - [x] Step 5: save/load of crate contents (sidecar file, transaction-checked)
-- [ ] Count crate contents as stock for reordering
+- [x] Count crate contents as stock for reordering
 - [ ] Real crate model
 
 ## Build

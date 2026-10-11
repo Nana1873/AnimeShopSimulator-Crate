@@ -41,6 +41,11 @@ namespace AnimeShopCrate
 
         internal static int ItemCount(int id) => Crates.TryGetValue(id, out var c) ? c.Items.Count : 0;
 
+        internal static void ForEachContents(Action<List<CrateItem>> visit)
+        {
+            foreach (var c in Crates.Values) visit(c.Items);
+        }
+
         internal static ulong OwnerOf(int id) => Crates.TryGetValue(id, out var c) ? c.Owner : 0;
 
         /// <summary>Every player has one crate: true while that player's crate stands in the world.</summary>
