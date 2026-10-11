@@ -23,7 +23,7 @@ namespace AnimeShopCrate
         private const float FirstPersonScale = 0.8f;
         // Third person: carried in front of the body at waist height, relative to the character root.
         // The game's third-person product socket sits on the left hand bone and swings with the arm.
-        private static readonly Vector3 ThirdPersonBase = new Vector3(0f, 0.95f, 0.42f);
+        private static readonly Vector3 ThirdPersonBase = new Vector3(0f, 1.0f, 0.27f);
 
         private static readonly Dictionary<IntPtr, GameObject> Crates = new();
         private static Material _material;
