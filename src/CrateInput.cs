@@ -126,6 +126,7 @@ namespace AnimeShopCrate
                 if (comp != null) found = comp.GetComponentInParent<Il2CppProject.Code.Gameplay.Interactions.TrashCan>();
             }
             if (found?.Pointer == AimedTrash?.Pointer) return;
+            if (found == null || found.Pointer != _confirmedTrash) _confirmedTrash = System.IntPtr.Zero;
             try { AimedTrash?.EnableLook(false); } catch { }
             AimedTrash = found;
             try { AimedTrash?.EnableLook(true); } catch { }
@@ -138,13 +139,41 @@ namespace AnimeShopCrate
             AimedTrash = null;
         }
 
+        private static System.IntPtr _confirmedTrash;
+        private static float _confirmedUntil;
+
         private static void Trash(List<(CrateItem item, int count)> groups)
         {
             if (groups.Count == 0) { Say(Text.Get("w.crate_empty")); return; }
             if (!Game.TrashAllowed()) { Say(Text.Get("w.trash_off")); return; }
             var chosen = groups[Selected].item;
-            CrateNet.SendCommand(CrateNet.CmdTrash + chosen.ProductId);
-            try { AimedTrash.PlayTrashSound(); } catch { }
+            var can = AimedTrash;
+            // Like the game: ask before throwing away. One "yes" covers more clicks on the same
+            // trash can for a short while, so emptying a crate is not a dialog per product.
+            if (can.Pointer == _confirmedTrash && Time.time < _confirmedUntil)
+            {
+                ThrowAway(can, chosen.ProductId);
+                return;
+            }
+            var ui = AllServices.Get<Il2CppProject.Code.Core.UI.UIService>();
+            if (ui == null) { ThrowAway(can, chosen.ProductId); return; }
+            string productId = chosen.ProductId;
+            var p = new Il2CppProject.Code.Gameplay.UI.Other.WarningView.Params();
+            p.OnConfirm = (Il2CppSystem.Action)(System.Action)(() =>
+            {
+                _confirmedTrash = can.Pointer;
+                ThrowAway(can, productId);
+            });
+            p.OnRefuse = (Il2CppSystem.Action)(System.Action)(() => { });
+            try { ui.ShowWarningView(p); }
+            catch (Exception e) { Settings.Debug("confirm dialog failed: " + e.Message); ThrowAway(can, productId); }
+        }
+
+        private static void ThrowAway(Il2CppProject.Code.Gameplay.Interactions.TrashCan can, string productId)
+        {
+            _confirmedUntil = Time.time + 10f;
+            CrateNet.SendCommand(CrateNet.CmdTrash + productId);
+            try { can?.PlayTrashSound(); } catch { }
         }
 
         private static bool HandsFree(Il2CppProject.Code.Gameplay.Player.Controllers.PlayerCharacterController player) =>
