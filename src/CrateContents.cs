@@ -66,7 +66,7 @@ namespace AnimeShopCrate
             }
 
             List<List<Stack>> bestRows = null;
-            float bestShrink = 0f, bestBand = innerD;
+            float bestShrink = 0f, bestSize = 0f, bestBand = innerD;
             for (int rowCount = 1; rowCount <= MaxRows; rowCount++)
             {
                 float band = (innerD - (rowCount - 1) * RowGap) / rowCount;
@@ -77,7 +77,11 @@ namespace AnimeShopCrate
                 List<List<Stack>> rows;
                 while ((rows = Pack(stacks, innerW, shrink)).Count > rowCount && shrink > MinShrink) shrink -= 0.02f;
                 if (rows.Count > rowCount) continue;
-                if (shrink > bestShrink + 0.001f) { bestShrink = shrink; bestRows = rows; bestBand = band; }
+                // Compare the size the products actually get (their scale depends on the row depth too).
+                float size = 0f;
+                foreach (var st in stacks) size += st.Scale * shrink;
+                size /= stacks.Count;
+                if (size > bestSize + 0.001f) { bestSize = size; bestShrink = shrink; bestRows = rows; bestBand = band; }
             }
             if (bestRows == null)
             {

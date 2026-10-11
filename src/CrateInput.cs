@@ -130,8 +130,11 @@ namespace AnimeShopCrate
                 var comp = found == null ? target.TryCast<Component>() : null;
                 // The can's furniture root (PickupReplacePiece, for moving it) can be hit instead of the can itself.
                 if (comp != null)
-                    found = comp.GetComponentInParent<Il2CppProject.Code.Gameplay.Interactions.TrashCan>()
-                         ?? comp.GetComponentInChildren<Il2CppProject.Code.Gameplay.Interactions.TrashCan>();
+                {
+                    found = comp.GetComponentInParent<Il2CppProject.Code.Gameplay.Interactions.TrashCan>();
+                    if (found == null && target.TryCast<Il2CppProject.Code.Gameplay.Player.Build.PickupReplacePiece>() != null)
+                        found = comp.GetComponentInChildren<Il2CppProject.Code.Gameplay.Interactions.TrashCan>();
+                }
             }
             if (found?.Pointer == AimedTrash?.Pointer) return;
             if (found == null || found.Pointer != _confirmedTrash) _confirmedTrash = System.IntPtr.Zero;
