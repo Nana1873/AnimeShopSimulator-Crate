@@ -14,16 +14,18 @@ namespace AnimeShopCrate
     internal static class CrateVisual
     {
         // Outer size in metres.
-        internal const float Width = CrateMesh.Width, Depth = CrateMesh.Depth, Height = CrateMesh.Height, Wall = CrateMesh.Wall;
+        // The model is scaled up to the size of a large shop crate (about 55 x 40 x 32 cm).
+        internal const float Size = 1.25f;
+        internal const float Width = CrateMesh.Width * Size, Depth = CrateMesh.Depth * Size, Height = CrateMesh.Height * Size, Wall = CrateMesh.Wall * Size;
         private static readonly Color CrateColor = new Color(0.16f, 0.45f, 0.85f);
         // Built-in pose relative to the held-item slot; the settings offsets are added on top.
         // First person: low and a bit forward, tilted towards the camera so you can look inside.
         private static readonly Vector3 FirstPersonBase = new Vector3(0f, -0.10f, 0.24f);
         private static readonly Vector3 FirstPersonTilt = new Vector3(-38f, 0f, 0f);
-        private const float FirstPersonScale = 0.68f;
+        private const float FirstPersonScale = 0.55f; // keeps the in-hand view as before despite the bigger crate
         // Third person: carried in front of the body at waist height, relative to the character root.
         // The game's third-person product socket sits on the left hand bone and swings with the arm.
-        private static readonly Vector3 ThirdPersonBase = new Vector3(0f, 1.0f, 0.27f);
+        private static readonly Vector3 ThirdPersonBase = new Vector3(0f, 0.98f, 0.33f);
 
         private sealed class Held
         {
@@ -116,6 +118,7 @@ namespace AnimeShopCrate
             var root = new GameObject("AnimeShopCrate_Crate");
             var model = new GameObject("Model");
             model.transform.SetParent(root.transform, false);
+            model.transform.localScale = Vector3.one * Size;
             model.AddComponent<MeshFilter>().sharedMesh = CrateMesh.Get();
             var r = model.AddComponent<MeshRenderer>();
             var mats = new Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<Material>(2);
