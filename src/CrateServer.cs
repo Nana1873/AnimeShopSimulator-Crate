@@ -109,6 +109,8 @@ namespace AnimeShopCrate
         /// <summary>Host: throws one product of this kind out of the player's crate.</summary>
         internal static void Trash(PlayerCharacterController player, string productId)
         {
+            // Same rule the game uses for products in hands.
+            if (!Game.TrashAllowed()) { Settings.Debug("trash refused: disabled in this lobby."); return; }
             ulong owner = player.SteamId;
             var items = CrateStore.Get(owner);
             int index = items.FindLastIndex(i => Ids.Same(i.ProductId, productId));

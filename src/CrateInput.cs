@@ -141,6 +141,7 @@ namespace AnimeShopCrate
         private static void Trash(List<(CrateItem item, int count)> groups)
         {
             if (groups.Count == 0) { Say("Die Kiste ist leer."); return; }
+            if (!Game.TrashAllowed()) { Say("Produkte wegwerfen ist in dieser Lobby ausgeschaltet."); return; }
             var chosen = groups[Selected].item;
             CrateNet.SendCommand(CrateNet.CmdTrash + chosen.ProductId);
             try { AimedTrash.PlayTrashSound(); } catch { }

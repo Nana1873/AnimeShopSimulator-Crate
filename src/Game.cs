@@ -32,6 +32,17 @@ namespace AnimeShopCrate
         internal static PlayerAnimationController Animation(PlayerCharacterController player) =>
             player == null ? null : player.GetComponentInChildren<PlayerAnimationController>(true);
 
+        /// <summary>The lobby option the game checks before products may go into a trash can.</summary>
+        internal static bool TrashAllowed()
+        {
+            try
+            {
+                var lobby = AllServices.Get<Il2CppProject.Code.Gameplay.Services.SteamLobby.SteamLobbyService>();
+                return lobby == null || lobby.CanDropProductsInTrashCan;
+            }
+            catch { return true; }
+        }
+
         /// <summary>True when the game would accept a gameplay key press (no menu, no cursor).</summary>
         internal static bool CanTakeKeys()
         {
