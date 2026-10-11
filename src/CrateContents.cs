@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -50,8 +51,8 @@ namespace AnimeShopCrate
 
             // Products stand upright like books in a box: one stack per product, front to back, the
             // stacks side by side across the crate. With many different products the stacks go into
-            // several rows behind each other instead of all shrinking into one row; the layout with
-            // the largest products wins. The front item of each stack shows its cover towards you.
+            // several rows behind each other (at most three, tall products at the back) instead of all
+            // shrinking into one row; the layout with the largest products wins. The front item of each stack shows its cover towards you.
             float innerW = CrateVisual.Width - 2 * CrateVisual.Wall;
             float innerD = CrateVisual.Depth - 2 * CrateVisual.Wall;
             float innerH = CrateVisual.Height - CrateVisual.Wall;
@@ -121,7 +122,7 @@ namespace AnimeShopCrate
         }
 
         private const float Gap = 0.004f, StackGap = 0.01f, RowGap = 0.012f, MinShrink = 0.25f;
-        private const int MaxRows = 4;
+        private const int MaxRows = 3;
 
         // One stack per product (split when it is deeper than a row), each at the product's own scale.
         private static List<Stack> BuildStacks(List<int> order, Dictionary<int, List<CrateItem>> byDef,
@@ -153,7 +154,8 @@ namespace AnimeShopCrate
                     current.Items.Add(it);
                 }
             }
-            return stacks;
+            // Rows fill from the far wall: tall products go to the back so they don't hide small ones.
+            return stacks.OrderByDescending(st => st.Footprint.y * st.Scale).ToList();
         }
 
         // Fills rows left to right in order; a stack that does not fit starts the next row.
