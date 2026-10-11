@@ -51,7 +51,7 @@ namespace AnimeShopCrate
 
             // Products stand upright like books in a box: one stack per product, front to back, the
             // stacks side by side across the crate. With many different products the stacks go into
-            // several rows behind each other (at most three, tall products at the back) instead of all
+            // several rows behind each other (at most two, tall products at the back) instead of all
             // shrinking into one row; the layout with the largest products wins. The front item of each stack shows its cover towards you.
             float innerW = CrateVisual.Width - 2 * CrateVisual.Wall;
             float innerD = CrateVisual.Depth - 2 * CrateVisual.Wall;
@@ -122,7 +122,7 @@ namespace AnimeShopCrate
         }
 
         private const float Gap = 0.004f, StackGap = 0.01f, RowGap = 0.012f, MinShrink = 0.25f;
-        private const int MaxRows = 3;
+        private const int MaxRows = 2;
 
         // One stack per product (split when it is deeper than a row), each at the product's own scale.
         private static List<Stack> BuildStacks(List<int> order, Dictionary<int, List<CrateItem>> byDef,
