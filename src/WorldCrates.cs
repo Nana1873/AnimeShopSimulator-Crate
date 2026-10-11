@@ -160,9 +160,11 @@ namespace AnimeShopCrate
                 // Ray against the crate's box in its own space.
                 var t = c.Visual.transform;
                 Vector3 o = t.InverseTransformPoint(origin), d = t.InverseTransformDirection(dir);
-                var box = new Bounds(new Vector3(0f, CrateVisual.Height / 2f, 0f),
-                                     new Vector3(CrateVisual.Width + 0.06f, CrateVisual.Height + 0.06f, CrateVisual.Depth + 0.06f));
-                if (box.IntersectRay(new Ray(o, d), out float dist) && dist < bestDist)
+                const float pad = 0.03f;
+                if (RayHitsBox(o, d,
+                        -CrateVisual.Width / 2f - pad, -pad, -CrateVisual.Depth / 2f - pad,
+                        CrateVisual.Width / 2f + pad, CrateVisual.Height + pad, CrateVisual.Depth / 2f + pad,
+                        out float dist) && dist < bestDist)
                 {
                     bestDist = dist;
                     best = c.Id;
@@ -172,6 +174,28 @@ namespace AnimeShopCrate
             if (best != 0 && Physics.Raycast(origin, dir, out RaycastHit hit, bestDist, ~0, QueryTriggerInteraction.Ignore))
                 return 0;
             return best;
+        }
+
+        /// <summary>Slab test, plain floats (Unity's Bounds helpers misbehaved through the interop layer).</summary>
+        private static bool RayHitsBox(Vector3 o, Vector3 d, float minX, float minY, float minZ, float maxX, float maxY, float maxZ, out float dist)
+        {
+            float tMin = 0f, tMax = float.MaxValue;
+            dist = 0f;
+            if (!Slab(o.x, d.x, minX, maxX, ref tMin, ref tMax)) return false;
+            if (!Slab(o.y, d.y, minY, maxY, ref tMin, ref tMax)) return false;
+            if (!Slab(o.z, d.z, minZ, maxZ, ref tMin, ref tMax)) return false;
+            dist = tMin;
+            return true;
+        }
+
+        private static bool Slab(float o, float d, float min, float max, ref float tMin, ref float tMax)
+        {
+            if (System.Math.Abs(d) < 1e-6f) return o >= min && o <= max;
+            float t1 = (min - o) / d, t2 = (max - o) / d;
+            if (t1 > t2) { float x = t1; t1 = t2; t2 = x; }
+            if (t1 > tMin) tMin = t1;
+            if (t2 < tMax) tMax = t2;
+            return tMin <= tMax;
         }
 
         // ---------- save ----------
