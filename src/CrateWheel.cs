@@ -84,6 +84,7 @@ namespace AnimeShopCrate
             AdoptLock(view, source.transform, clone.transform);
             _viewWithCrate = view.Pointer;
 
+            LayoutHotkeyBadges(pie);
             view.RefreshLockIcons();
             view.RefreshToolImages();
             Settings.Debug($"wheel after: {tracker.PieMenuItems.Count} items, {view._toolImages?.Count} icons (crate icon index {_crateIconIndex}, lock index {_crateLockIndex}).");
@@ -121,6 +122,47 @@ namespace AnimeShopCrate
                 var copy = Find(clone, RelativePath(source, go.transform));
                 if (copy != null) { locks.Add(copy.gameObject); _crateLockIndex = locks.Count - 1; }
                 return;
+            }
+        }
+
+        /// <summary>
+        /// The 1-5 hotkey badges are fixed images under "Menu Items", placed for five slots.
+        /// Spread them over six slots (clockwise from the top) and add a "6" for the crate.
+        /// </summary>
+        private static void LayoutHotkeyBadges(PieMenu pie)
+        {
+            var root = pie.PieMenuElements?.menuItemsDir?.parent;
+            if (root == null) return;
+            var badges = new System.Collections.Generic.List<RectTransform>();
+            float radius = 0f;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                var child = root.GetChild(i);
+                var text = child.GetComponentInChildren<Il2CppTMPro.TMP_Text>(true);
+                if (text == null || !int.TryParse(text.text, out int n) || n < 1 || n > 6) continue;
+                var rt = child.TryCast<RectTransform>();
+                if (rt == null) continue;
+                while (badges.Count < n) badges.Add(null);
+                badges[n - 1] = rt;
+                radius = Mathf.Max(radius, rt.anchoredPosition.magnitude);
+            }
+            if (badges.Count < 5 || badges[4] == null || radius <= 0f)
+            {
+                Settings.Debug("hotkey badges not found; left as they are.");
+                return;
+            }
+            if (badges.Count < 6)
+            {
+                var six = Object.Instantiate(badges[4].gameObject, root).GetComponent<RectTransform>();
+                six.name = "Image (Crate)";
+                six.GetComponentInChildren<Il2CppTMPro.TMP_Text>(true).text = "6";
+                badges.Add(six);
+            }
+            for (int i = 0; i < 6; i++)
+            {
+                if (badges[i] == null) continue;
+                float angle = (90f - 60f * i) * Mathf.Deg2Rad;
+                badges[i].anchoredPosition = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
             }
         }
 
