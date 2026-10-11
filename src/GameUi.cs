@@ -89,7 +89,7 @@ namespace AnimeShopCrate
                 rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
                 rt.pivot = new Vector2(0f, 1f);
                 rt.anchoredPosition = new Vector2(30f, -170f);
-                rt.sizeDelta = new Vector2(420f, 100f);
+                rt.sizeDelta = new Vector2(520f, 100f);
 
                 var bg = _panel.AddComponent<Image>();
                 StyleLike(bg, view);
@@ -103,7 +103,7 @@ namespace AnimeShopCrate
                 var fit = _panel.AddComponent<ContentSizeFitter>();
                 fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                _title = Label(_panel.transform, "Title", 22f, FontStyles.Bold, TextAlignmentOptions.Left);
+                _title = Label(_panel.transform, "Title", 20f, FontStyles.Bold, TextAlignmentOptions.Left);
                 var rowsGo = new GameObject("Rows");
                 _rows = rowsGo.AddComponent<RectTransform>();
                 _rows.SetParent(_panel.transform, false);
