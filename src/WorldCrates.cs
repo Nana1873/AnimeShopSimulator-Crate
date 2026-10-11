@@ -22,6 +22,7 @@ namespace AnimeShopCrate
             internal int Id;
             internal Vector3 Position;
             internal float Yaw;
+            internal ulong Owner;
             internal readonly List<CrateItem> Items = new();
             internal GameObject Visual;
         }
@@ -36,13 +37,23 @@ namespace AnimeShopCrate
 
         internal static int ItemCount(int id) => Crates.TryGetValue(id, out var c) ? c.Items.Count : 0;
 
+        internal static ulong OwnerOf(int id) => Crates.TryGetValue(id, out var c) ? c.Owner : 0;
+
+        /// <summary>Every player has one crate: true while that player's crate stands in the world.</summary>
+        internal static bool HasCrateOf(ulong owner)
+        {
+            foreach (var c in Crates.Values) if (c.Owner == owner) return true;
+            return false;
+        }
+
         // ---------- host ----------
 
         internal static void HostDrop(PlayerCharacterController player, Vector3 pos, float yaw)
         {
             ulong owner = player.SteamId;
+            if (HasCrateOf(owner)) { Settings.Debug("set down refused: this player's crate already stands somewhere."); return; }
             if (Vector3.Distance(player.transform.position, pos) > 3f) pos = player.transform.position;
-            var c = new Crate { Id = _nextId++, Position = pos, Yaw = yaw };
+            var c = new Crate { Id = _nextId++, Position = pos, Yaw = yaw, Owner = owner };
             var held = CrateStore.Get(owner);
             c.Items.AddRange(held);
             held.Clear();
@@ -59,6 +70,7 @@ namespace AnimeShopCrate
             if (!Crates.TryGetValue(id, out var c)) return;
             ulong owner = player.SteamId;
             if (Vector3.Distance(player.transform.position, c.Position) > 4f) { Settings.Debug("pick up refused: too far."); return; }
+            if (c.Owner != 0 && c.Owner != owner) { Settings.Debug("pick up refused: someone else's crate."); return; }
             var held = CrateStore.Get(owner);
             if (held.Count > 0) { Settings.Debug("pick up refused: the player's crate is not empty."); return; }
             held.AddRange(c.Items);
@@ -86,7 +98,8 @@ namespace AnimeShopCrate
                 .Append(c.Position.x.ToString("0.###", inv)).Append(',')
                 .Append(c.Position.y.ToString("0.###", inv)).Append(',')
                 .Append(c.Position.z.ToString("0.###", inv)).Append(',')
-                .Append(c.Yaw.ToString("0.#", inv)).Append('|');
+                .Append(c.Yaw.ToString("0.#", inv)).Append(',')
+                .Append(c.Owner.ToString(inv)).Append('|');
             CrateStore.AppendItems(sb, c.Items);
             return sb.ToString();
         }
@@ -104,6 +117,7 @@ namespace AnimeShopCrate
             if (!Crates.TryGetValue(id, out var c)) Crates[id] = c = new Crate { Id = id };
             c.Position = new Vector3(F(p[0]), F(p[1]), F(p[2]));
             c.Yaw = F(p[3]);
+            c.Owner = p.Length > 4 && ulong.TryParse(p[4], NumberStyles.None, inv, out ulong o) ? o : 0;
             c.Items.Clear();
             if (parts.Length > 2) CrateStore.ParseItems(parts[2], c.Items);
             if (id >= _nextId) _nextId = id + 1;

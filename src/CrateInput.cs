@@ -123,7 +123,12 @@ namespace AnimeShopCrate
                 Say("Deine Kiste ist nicht leer – erst ausräumen oder abstellen.");
                 return;
             }
-            CrateMode.Enter();
+            if (WorldCrates.OwnerOf(id) != 0 && WorldCrates.OwnerOf(id) != player.SteamId)
+            {
+                Say("Das ist die Kiste von einem Mitspieler.");
+                return;
+            }
+            CrateMode.Enter(pickingUp: true);
             CrateNet.SendCommand(CrateNet.CmdPickUp + id.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 

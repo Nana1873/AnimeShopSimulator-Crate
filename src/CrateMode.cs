@@ -22,12 +22,17 @@ namespace AnimeShopCrate
 
         internal static bool IsLocalActive => IsActive(Game.Animation(Game.LocalPlayer));
 
-        internal static void Enter()
+        internal static void Enter(bool pickingUp = false)
         {
             var player = Game.LocalPlayer;
             var anim = Game.Animation(player);
             var interactions = player?._interactionsController;
             if (anim == null || interactions == null) return;
+            if (!pickingUp && WorldCrates.HasCrateOf(player.SteamId))
+            {
+                CrateInput.Say("Deine Kiste steht noch irgendwo – heb sie zuerst wieder auf.");
+                return;
+            }
             if (!interactions.CanOpenInventoryMenu)
             {
                 Settings.Debug("crate not taken: hands are not free.");

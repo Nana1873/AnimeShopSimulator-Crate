@@ -17,8 +17,11 @@ namespace AnimeShopCrate
                 {
                     Styles();
                     int n = WorldCrates.ItemCount(CrateInput.AimedWorldCrate);
-                    GUI.Label(new Rect(Screen.width / 2f - 300, Screen.height * 0.56f, 600, 30),
-                        $"[{DropKey.Label}] Kiste aufheben ({n} {(n == 1 ? "Produkt" : "Produkte")})", _center);
+                    ulong owner = WorldCrates.OwnerOf(CrateInput.AimedWorldCrate);
+                    string text = owner != 0 && owner != player.SteamId
+                        ? $"Kiste von einem Mitspieler ({n} {(n == 1 ? "Produkt" : "Produkte")})"
+                        : $"[{DropKey.Label}] Kiste aufheben ({n} {(n == 1 ? "Produkt" : "Produkte")})";
+                    GUI.Label(new Rect(Screen.width / 2f - 300, Screen.height * 0.56f, 600, 30), text, _center);
                 }
                 DrawHint();
                 return;

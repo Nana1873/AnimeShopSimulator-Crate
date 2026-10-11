@@ -31,6 +31,7 @@ namespace AnimeShopCrate
                 return;
             }
             ulong owner = player.SteamId;
+            if (WorldCrates.HasCrateOf(owner)) { Settings.Debug("crate command ignored: this player's crate stands in the world."); return; }
             bool changed = command == CrateNet.CmdTake
                 ? Take(owner, place)
                 : command.StartsWith(CrateNet.CmdPut, StringComparison.Ordinal) && Put(player, owner, place, command.Substring(CrateNet.CmdPut.Length));
