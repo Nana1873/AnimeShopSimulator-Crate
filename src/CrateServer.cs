@@ -67,7 +67,7 @@ namespace AnimeShopCrate
 
             CrateStore.Get(owner).Add(new CrateItem
             {
-                ProductId = id.ToString(),
+                ProductId = Ids.ToText(id),
                 DefinitionId = def.Id,
                 VariantDefinitionId = payload?.VariantDefinitionId ?? 0,
                 VariantKeychainFoil = payload?.VariantKeychainFoil ?? 0,
@@ -81,8 +81,8 @@ namespace AnimeShopCrate
         {
             var items = CrateStore.Get(owner);
             // A filled slot only takes more of its own product; an empty one takes what the player picked.
-            string wanted = place.Count > 0 ? place.Id.ToString() : requestedId;
-            int index = items.FindLastIndex(i => string.Equals(i.ProductId, wanted, StringComparison.OrdinalIgnoreCase));
+            string wanted = place.Count > 0 ? Ids.ToText(place.Id) : requestedId;
+            int index = items.FindLastIndex(i => Ids.Same(i.ProductId, wanted));
             if (index < 0) { Settings.Debug("put refused: product not in the crate."); return false; }
             var item = items[index];
 
@@ -101,7 +101,7 @@ namespace AnimeShopCrate
                 VariantKeychainId = item.VariantKeychainId,
                 HasValue = true,
             };
-            if (!place.TryAddItem(Il2CppSystem.Guid.Parse(item.ProductId), payload)) { Settings.Debug("put refused by the game."); return false; }
+            if (!place.TryAddItem(Ids.FromText(item.ProductId), payload)) { Settings.Debug("put refused by the game."); return false; }
             items.RemoveAt(index);
             Settings.Debug($"put {def.Name} from the crate of {owner} onto a slot.");
             return true;

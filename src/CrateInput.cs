@@ -41,7 +41,7 @@ namespace AnimeShopCrate
             if (player == null) return result;
             foreach (var it in CrateStore.Get(player.SteamId))
             {
-                int i = result.FindIndex(g => g.Item1.ProductId == it.ProductId);
+                int i = result.FindIndex(g => Ids.Same(g.Item1.ProductId, it.ProductId));
                 if (i < 0) result.Add((it, 1));
                 else result[i] = (result[i].Item1, result[i].Item2 + 1);
             }
@@ -68,7 +68,7 @@ namespace AnimeShopCrate
 
             var place = AimedPlace();
             if (place == null) { Say("Kein Regalfach oder offener Karton im Blick."); return; }
-            if (take) CrateNet.SendPlaceCommand(place, CrateNet.CmdTake);
+            if (take) TryTake(place);
             else TryPut(place, groups);
         }
 
@@ -79,14 +79,26 @@ namespace AnimeShopCrate
             return false;
         }
 
+        private static void TryTake(ProductPlace place)
+        {
+            if (place.Count <= 0) { Say("Hier liegt nichts."); return; }
+            var box = place._pickupProducts;
+            if (box != null && !box.IsOpened) { Say("Den Karton zuerst öffnen."); return; }
+            var def = ProductHandsUtility.ResolveProductDefinition(AllServices.Get<ProductsService>(), place.Id);
+            if (!CrateRules.Allowed(def)) { Say($"{def?.Name ?? "Das"} passt nicht in die Kiste."); return; }
+            var player = Game.LocalPlayer;
+            if (CrateStore.UsedSpace(player.SteamId) + CrateRules.SpaceOf(def) > CrateRules.Capacity) { Say("Die Kiste ist voll."); return; }
+            CrateNet.SendPlaceCommand(place, CrateNet.CmdTake);
+        }
+
         private static void TryPut(ProductPlace place, List<(CrateItem item, int count)> groups)
         {
             if (groups.Count == 0) { Say("Die Kiste ist leer."); return; }
             string productId;
             if (place.Count > 0)
             {
-                productId = place.Id.ToString();
-                if (groups.FindIndex(g => string.Equals(g.item.ProductId, productId, StringComparison.OrdinalIgnoreCase)) < 0)
+                productId = Ids.ToText(place.Id);
+                if (groups.FindIndex(g => Ids.Same(g.item.ProductId, productId)) < 0)
                 {
                     Say("In diesem Fach liegt ein anderes Produkt.");
                     return;
