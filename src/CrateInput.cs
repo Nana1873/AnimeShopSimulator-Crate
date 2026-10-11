@@ -234,8 +234,15 @@ namespace AnimeShopCrate
             return best;
         }
 
+        private static string _lastSaid;
+        private static float _lastSaidAt = -10f;
+
         internal static void Say(string text)
         {
+            // Holding a mouse button repeats actions; do not stack the same warning.
+            if (text == _lastSaid && Time.time - _lastSaidAt < 2f) return;
+            _lastSaid = text;
+            _lastSaidAt = Time.time;
             // The game's own warning; the plain overlay only if the HUD is not available.
             if (GameUi.Warn(text)) return;
             Hint = text;

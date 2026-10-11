@@ -26,7 +26,8 @@ namespace AnimeShopCrate
             Scale = cat.CreateEntry("CrateScale", 1f, null, "Size multiplier for the crate model.");
             FirstPersonTiltX = cat.CreateEntry("FirstPersonTiltX", 0f, null, "Extra tilt of the crate in your own view (degrees, negative = towards you).");
             DropKey = cat.CreateEntry("DropKey", "Game", null, "Key to set the crate down / pick it up. 'Game' = the game's own drop key (the one for boxes); or a key name like F or T.");
-            CrateCapacity = cat.CreateEntry("CrateCapacity", 24, null, "Crate space (pin/keychain/booster 1, manga 2, figure 4, ...). The host's value counts.");
+            CrateCapacity = cat.CreateEntry("CrateSpace", 48, null, "Crate space (pin/keychain/booster 1, manga 2, figure 4, ...). The host's value counts.");
+            cat.DeleteEntry("CrateCapacity"); // old name, from the smaller crate
             ThirdPersonTiltX = cat.CreateEntry("ThirdPersonTiltX", 0f, null, "Extra tilt of the crate on other players (degrees).");
         }
 
