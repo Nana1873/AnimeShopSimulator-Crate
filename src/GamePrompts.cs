@@ -44,7 +44,8 @@ namespace AnimeShopCrate
                 }
                 else if (CrateMode.IsLocalActive)
                 {
-                    Wanted.Add("ASC/put"); Wanted.Add("ASC/take"); Wanted.Add("ASC/select"); Wanted.Add("ASC/drop");
+                    Wanted.Add(CrateInput.AimedTrash != null ? "ASC/trash" : "ASC/put");
+                    Wanted.Add("ASC/take"); Wanted.Add("ASC/select"); Wanted.Add("ASC/drop");
                 }
                 else if (CrateInput.AimedWorldCrate != 0 && WorldCrates.OwnerOf(CrateInput.AimedWorldCrate) is ulong o
                          && (o == 0 || o == player.SteamId))
@@ -143,7 +144,7 @@ namespace AnimeShopCrate
 
         private static InputEnum InputFor(string key) => key switch
         {
-            "ASC/put" or "ASC/place" => InputEnum.Use,
+            "ASC/put" or "ASC/place" or "ASC/trash" => InputEnum.Use,
             "ASC/take" or "ASC/cancel" => InputEnum.Back,
             "ASC/select" or "ASC/rotate" => InputEnum.RotateHorizontal,
             _ => DropKey.Action,

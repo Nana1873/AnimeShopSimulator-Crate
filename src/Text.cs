@@ -10,6 +10,7 @@ namespace AnimeShopCrate
         {
             ["ASC/put"] = ("Einräumen", "Put on shelf"),
             ["ASC/take"] = ("In die Kiste", "Into crate"),
+            ["ASC/trash"] = ("Wegwerfen", "Throw away"),
             ["ASC/select"] = ("Produkt wählen", "Choose product"),
             ["ASC/drop"] = ("Kiste abstellen", "Set crate down"),
             ["ASC/place"] = ("Platzieren", "Place"),

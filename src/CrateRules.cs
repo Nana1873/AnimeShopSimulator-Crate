@@ -22,6 +22,10 @@ namespace AnimeShopCrate
             { EProductType.Figure, 4 },
             { EProductType.BoxBoosters, 4 },
             { EProductType.BoxFigures, 6 },
+            { EProductType.Dress, 4 },
+            { EProductType.BigBoxBoosters, 8 },
+            { EProductType.Cushion, 8 },
+            { EProductType.Daki, 12 },
         };
 
         internal static int Capacity => Settings.CrateCapacity.Value;

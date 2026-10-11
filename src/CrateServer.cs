@@ -106,6 +106,19 @@ namespace AnimeShopCrate
             return true;
         }
 
+        /// <summary>Host: throws one product of this kind out of the player's crate.</summary>
+        internal static void Trash(PlayerCharacterController player, string productId)
+        {
+            ulong owner = player.SteamId;
+            var items = CrateStore.Get(owner);
+            int index = items.FindLastIndex(i => Ids.Same(i.ProductId, productId));
+            if (index < 0) return;
+            Settings.Debug($"{owner} threw {CrateRules.Name(items[index].DefinitionId)} away.");
+            items.RemoveAt(index);
+            CrateStore.NotifyChanged(owner);
+            CrateNet.Broadcast(owner);
+        }
+
         private static Vector3 CrateWorldPosition(PlayerCharacterController player)
         {
             var t = player.transform;

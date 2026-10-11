@@ -60,6 +60,7 @@ namespace AnimeShopCrate
             if (!_synced) { _synced = true; CrateNet.RequestSync(); }
 
             bool holding = CrateMode.IsLocalActive;
+            if (!holding || CratePlacement.Active) ClearTrashAim();
             AimedWorldCrate = !holding && HandsFree(player) ? WorldCrates.Aimed() : 0;
             WorldCrates.SetHovered(AimedWorldCrate);
             if (!Game.CanTakeKeys()) return;
@@ -87,9 +88,16 @@ namespace AnimeShopCrate
             if (Selected >= groups.Count) Selected = Math.Max(0, groups.Count - 1);
             CrateVisual.HighlightSelected(groups.Count > 0 ? groups[Selected].item.ProductId : null);
 
+            UpdateTrashAim();
             bool put = Pressed(mouse.leftButton);
             bool take = !put && Pressed(mouse.rightButton);
             if (!put && !take) return;
+
+            if (put && AimedTrash != null)
+            {
+                Trash(groups);
+                return;
+            }
 
             Settings.Trace(put ? "LMB" : "RMB");
             var place = AimedPlace();
@@ -102,6 +110,40 @@ namespace AnimeShopCrate
             }
             if (take) TryTake(place);
             else TryPut(place, groups);
+        }
+
+        /// <summary>Trash can under the crosshair while holding the crate (null = none).</summary>
+        internal static Il2CppProject.Code.Gameplay.Interactions.TrashCan AimedTrash;
+
+        private static void UpdateTrashAim()
+        {
+            Il2CppProject.Code.Gameplay.Interactions.TrashCan found = null;
+            var target = Game.LocalPlayer?._raycastController?.Interactable;
+            if (target != null)
+            {
+                found = target.TryCast<Il2CppProject.Code.Gameplay.Interactions.TrashCan>();
+                var comp = found == null ? target.TryCast<Component>() : null;
+                if (comp != null) found = comp.GetComponentInParent<Il2CppProject.Code.Gameplay.Interactions.TrashCan>();
+            }
+            if (found?.Pointer == AimedTrash?.Pointer) return;
+            try { AimedTrash?.EnableLook(false); } catch { }
+            AimedTrash = found;
+            try { AimedTrash?.EnableLook(true); } catch { }
+        }
+
+        internal static void ClearTrashAim()
+        {
+            if (AimedTrash == null) return;
+            try { AimedTrash.EnableLook(false); } catch { }
+            AimedTrash = null;
+        }
+
+        private static void Trash(List<(CrateItem item, int count)> groups)
+        {
+            if (groups.Count == 0) { Say("Die Kiste ist leer."); return; }
+            var chosen = groups[Selected].item;
+            CrateNet.SendCommand(CrateNet.CmdTrash + chosen.ProductId);
+            try { AimedTrash.PlayTrashSound(); } catch { }
         }
 
         private static bool HandsFree(Il2CppProject.Code.Gameplay.Player.Controllers.PlayerCharacterController player) =>

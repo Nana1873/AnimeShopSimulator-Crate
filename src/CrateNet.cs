@@ -24,6 +24,7 @@ namespace AnimeShopCrate
         internal const string CmdSync = "ASC1|sync";
         internal const string CmdDrop = "ASC1|drop|";     // + x,y,z,yaw
         internal const string CmdPickUp = "ASC1|pickup|"; // + world crate id
+        internal const string CmdTrash = "ASC1|trash|";   // + product id
         private const string AnyPrefix = "ASC1";
 
         private static bool IsOurs(string text) => text != null && text.StartsWith(AnyPrefix, StringComparison.Ordinal);
@@ -121,6 +122,8 @@ namespace AnimeShopCrate
                                 new UnityEngine.Vector3(float.Parse(f[0], inv), float.Parse(f[1], inv), float.Parse(f[2], inv)),
                                 float.Parse(f[3], inv));
                     }
+                    else if (player != null && A_1.StartsWith(CmdTrash, StringComparison.Ordinal))
+                        CrateServer.Trash(player, A_1.Substring(CmdTrash.Length));
                     else if (player != null && A_1.StartsWith(CmdPickUp, StringComparison.Ordinal)
                              && int.TryParse(A_1.Substring(CmdPickUp.Length), out int id))
                         WorldCrates.HostPickUp(player, id);
