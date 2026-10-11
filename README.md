@@ -4,10 +4,10 @@ MelonLoader mod for **Anime Shop Simulator** (IL2CPP, game v1.0.72): a crate too
 
 ## Status
 - [x] Step 1: Q wheel slot + crate in hand (visible to other players via the game's tool-mode sync)
-- [ ] Step 2: take products into the crate / place them from the crate (host-authoritative)
+- [x] Step 2: take products into the crate / place them from the crate (host-authoritative)
 - [ ] Step 3: crate contents shown in the crate + HUD list
 - [ ] Step 4: set the crate down / pick it up
-- [ ] Step 5: save/load
+- [x] Step 5: save/load of crate contents (sidecar file, transaction-checked)
 - [ ] Real crate model
 
 ## Build

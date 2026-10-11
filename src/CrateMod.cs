@@ -20,12 +20,21 @@ namespace AnimeShopCrate
 
         public override void OnUpdate()
         {
+            CrateSave.Update();
             CrateMode.Update();
+            CrateInput.Update();
+        }
+
+        public override void OnGUI()
+        {
+            CrateHud.Draw();
         }
 
         public override void OnSceneWasUnloaded(int buildIndex, string sceneName)
         {
             Game.Reset();
+            CrateInput.Reset();
+            CrateSave.ResetScene();
         }
     }
 }

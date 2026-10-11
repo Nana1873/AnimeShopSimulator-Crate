@@ -10,6 +10,7 @@ namespace AnimeShopCrate
         internal static MelonPreferences_Entry<float> ThirdPersonX, ThirdPersonY, ThirdPersonZ;
         internal static MelonPreferences_Entry<float> Scale;
         internal static MelonPreferences_Entry<float> FirstPersonTiltX, ThirdPersonTiltX;
+        internal static MelonPreferences_Entry<int> CrateCapacity;
 
         internal static void Init()
         {
@@ -23,6 +24,7 @@ namespace AnimeShopCrate
             ThirdPersonZ = cat.CreateEntry("ThirdPersonOffsetZ", 0f);
             Scale = cat.CreateEntry("CrateScale", 1f, null, "Size multiplier for the crate model.");
             FirstPersonTiltX = cat.CreateEntry("FirstPersonTiltX", 0f, null, "Extra tilt of the crate in your own view (degrees, negative = towards you).");
+            CrateCapacity = cat.CreateEntry("CrateCapacity", 24, null, "Crate space (pin/keychain/booster 1, manga 2, figure 4, ...). The host's value counts.");
             ThirdPersonTiltX = cat.CreateEntry("ThirdPersonTiltX", 0f, null, "Extra tilt of the crate on other players (degrees).");
         }
 
