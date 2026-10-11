@@ -25,6 +25,21 @@ namespace AnimeShopCrate
         internal static Mesh Get()
         {
             if (_mesh != null) return _mesh;
+            // The modelled crate (assets/crate.obj, made in Blender) is embedded in the DLL;
+            // the procedural one below is the fallback.
+            try
+            {
+                using var stream = typeof(CrateMesh).Assembly.GetManifestResourceStream("AnimeShopCrate.crate.obj");
+                if (stream != null)
+                {
+                    var loaded = ObjLoader.Load(stream, new[] { "CrateBody", "CrateRim" }, "AnimeShopCrate_CrateModel");
+                    Object.DontDestroyOnLoad(loaded);
+                    Settings.Debug($"crate model loaded: {loaded.vertexCount} vertices, bounds {loaded.bounds.size}.");
+                    return _mesh = loaded;
+                }
+            }
+            catch (System.Exception e) { CrateMod.Log.Warning("loading the crate model failed, using the simple one: " + e.Message); }
+
             var verts = new List<Vector3>();
             var body = new List<int>();
             var rim = new List<int>();
