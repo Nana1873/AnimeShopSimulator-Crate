@@ -12,7 +12,7 @@ namespace AnimeShopCrate
     /// </summary>
     internal static class Hooks
     {
-        internal const string BuiltForGame = "1.0.72";
+        internal const string BuiltForGame = "1.1.0";
 
         private sealed class Feature
         {
