@@ -44,8 +44,13 @@ namespace AnimeShopCrate
                 }
                 else if (CrateMode.IsLocalActive)
                 {
-                    Wanted.Add(CrateInput.AimedTrash != null ? "ASC/trash" : "ASC/put");
-                    Wanted.Add("ASC/take"); Wanted.Add("ASC/select"); Wanted.Add("ASC/drop");
+                    // On a price tag the clicks belong to the game (change price), so no put/take prompts there.
+                    if (!CrateInput.AimingAtPriceTag)
+                    {
+                        Wanted.Add(CrateInput.AimedTrash != null ? "ASC/trash" : "ASC/put");
+                        Wanted.Add("ASC/take");
+                    }
+                    Wanted.Add("ASC/select"); Wanted.Add("ASC/drop");
                 }
                 else if (CrateInput.AimedWorldCrate != 0 && WorldCrates.OwnerOf(CrateInput.AimedWorldCrate) is ulong o
                          && (o == 0 || o == player.SteamId))
@@ -131,7 +136,13 @@ namespace AnimeShopCrate
         {
             try
             {
-                if (show) _ui.ShowControlKey(p.Action);
+                if (show)
+                {
+                    _ui.ShowControlKey(p.Action);
+                    // Since game 1.1.0 the widget fills its text from the params after OnActivate.
+                    try { _ui.SetControlKeyText(p.Action, Text.Get(key)); }
+                    catch (Exception e) { Settings.Debug($"prompt {key} text failed: {e.Message}"); }
+                }
                 else _ui.HideControlKey(p.Action);
                 p.Shown = show;
             }
@@ -153,16 +164,35 @@ namespace AnimeShopCrate
         [HarmonyPatch(typeof(ControlKeyWidget), nameof(ControlKeyWidget.OnActivate))]
         private static class WidgetTextPatch
         {
-            private static void Postfix(ControlKeyWidget __instance)
+            private static void Postfix(ControlKeyWidget __instance) => FixText(__instance);
+        }
+
+        [HarmonyPatch(typeof(ControlKeyWidget), nameof(ControlKeyWidget.OnParamsUpdated))]
+        private static class WidgetParamsPatch
+        {
+            private static void Postfix(ControlKeyWidget __instance) => FixText(__instance);
+        }
+
+        // Runs when a prompt widget is built or refilled. Since game 1.1.0 the game builds them
+        // asynchronously, so a per-frame pass would show them for a frame first: hide blocked game
+        // prompts and fill the crate's text right here.
+        private static void FixText(ControlKeyWidget widget)
+        {
+            try
             {
-                try
+                string mean = widget.MeanKey;
+                if (mean == null) return;
+                if (mean.StartsWith("ASC/", StringComparison.Ordinal))
                 {
-                    string mean = __instance.MeanKey;
-                    if (mean != null && mean.StartsWith("ASC/", StringComparison.Ordinal) && __instance._meanText != null)
-                        __instance._meanText.text = Text.Get(mean);
+                    if (widget._meanText != null) widget._meanText.text = Text.Get(mean);
                 }
-                catch (Exception e) { Settings.Debug("prompt text failed: " + e.Message); }
+                else if (_blockedMeanKeys != null && _blockedMeanKeys.Contains(mean) && CrateMode.IsLocalActive
+                         && widget.gameObject.activeSelf)
+                {
+                    widget.gameObject.SetActive(false);
+                }
             }
+            catch (Exception e) { Settings.Debug("prompt text failed: " + e.Message); }
         }
     }
 }
