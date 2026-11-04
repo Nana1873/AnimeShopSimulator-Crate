@@ -65,6 +65,7 @@ namespace AnimeShopCrate
             if (!_synced) { _synced = true; CrateNet.RequestSync(); }
 
             bool holding = CrateMode.IsLocalActive;
+            AimingAtPriceTag = holding && Game.LocalPlayer._raycastController?.Interactable?.TryCast<ProductPricePlace>() != null;
             if (!holding || CratePlacement.Active) ClearTrashAim();
             AimedWorldCrate = !holding && HandsFree(player) ? WorldCrates.Aimed() : 0;
             WorldCrates.SetHovered(AimedWorldCrate);
@@ -297,6 +298,9 @@ namespace AnimeShopCrate
         }
 
         private static bool _aimingAtStorage;
+
+        /// <summary>True while the crate is held and the crosshair is on a price tag (those clicks stay with the game).</summary>
+        internal static bool AimingAtPriceTag;
 
         private static ProductPlace AimedPlace()
         {

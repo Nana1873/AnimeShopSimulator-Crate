@@ -103,32 +103,62 @@ namespace AnimeShopCrate
             }
         }
 
+        /// <summary>Host: runs a client's command that came in through the emoji RPC.</summary>
+        private static void HandleServerCommand(PlayerCharacterController player, string text)
+        {
+            try
+            {
+                if (text == CmdSync) BroadcastAll();
+                else if (player != null && text.StartsWith(CmdDrop, StringComparison.Ordinal))
+                {
+                    var f = text.Substring(CmdDrop.Length).Split(',');
+                    var inv = System.Globalization.CultureInfo.InvariantCulture;
+                    if (f.Length >= 4)
+                        WorldCrates.HostDrop(player,
+                            new UnityEngine.Vector3(float.Parse(f[0], inv), float.Parse(f[1], inv), float.Parse(f[2], inv)),
+                            float.Parse(f[3], inv));
+                }
+                else if (player != null && text.StartsWith(CmdTrash, StringComparison.Ordinal))
+                    CrateServer.Trash(player, text.Substring(CmdTrash.Length));
+                else if (player != null && text.StartsWith(CmdPickUp, StringComparison.Ordinal)
+                         && int.TryParse(text.Substring(CmdPickUp.Length), out int id))
+                    WorldCrates.HostPickUp(player, id);
+            }
+            catch (Exception e) { CrateMod.Log.Error("crate command failed on the host: " + e); }
+        }
+
+        // Since game 1.1.0 the server reader no longer passes our strings to RpcLogic___PlayEmojiServer
+        // (it checks the emoji name first), so read the string here, take ours, and rewind for the rest.
+        [HarmonyPatch(typeof(PlayerAnimationController), nameof(PlayerAnimationController.RpcReader___Server_PlayEmojiServer_3615296227))]
+        private static class ServerReaderPatch
+        {
+            private static bool Prefix(PlayerAnimationController __instance, PooledReader PooledReader0, Il2CppFishNet.Connection.NetworkConnection conn)
+            {
+                if (PooledReader0 == null) return true;
+                int start = PooledReader0.Position;
+                string text;
+                try { text = PooledReader0.ReadString(); }
+                catch { PooledReader0.Position = start; return true; }
+                if (!IsOurs(text)) { PooledReader0.Position = start; return true; }
+                Settings.Trace("host: command " + text);
+                var owner = __instance.Owner;
+                if (conn != null && owner != null && owner.ClientId != conn.ClientId)
+                {
+                    Settings.Debug("ignored a crate command sent for another player's character.");
+                    return false;
+                }
+                HandleServerCommand(__instance.GetComponentInParent<PlayerCharacterController>(), text);
+                return false;
+            }
+        }
+
         [HarmonyPatch(typeof(PlayerAnimationController), nameof(PlayerAnimationController.RpcLogic___PlayEmojiServer_3615296227))]
         private static class ServerStringPatch
         {
             private static bool Prefix(PlayerAnimationController __instance, string A_1)
             {
                 if (!IsOurs(A_1)) return true;
-                try
-                {
-                    var player = __instance.GetComponentInParent<PlayerCharacterController>();
-                    if (A_1 == CmdSync) BroadcastAll();
-                    else if (player != null && A_1.StartsWith(CmdDrop, StringComparison.Ordinal))
-                    {
-                        var f = A_1.Substring(CmdDrop.Length).Split(',');
-                        var inv = System.Globalization.CultureInfo.InvariantCulture;
-                        if (f.Length >= 4)
-                            WorldCrates.HostDrop(player,
-                                new UnityEngine.Vector3(float.Parse(f[0], inv), float.Parse(f[1], inv), float.Parse(f[2], inv)),
-                                float.Parse(f[3], inv));
-                    }
-                    else if (player != null && A_1.StartsWith(CmdTrash, StringComparison.Ordinal))
-                        CrateServer.Trash(player, A_1.Substring(CmdTrash.Length));
-                    else if (player != null && A_1.StartsWith(CmdPickUp, StringComparison.Ordinal)
-                             && int.TryParse(A_1.Substring(CmdPickUp.Length), out int id))
-                        WorldCrates.HostPickUp(player, id);
-                }
-                catch (Exception e) { CrateMod.Log.Error("crate command failed on the host: " + e); }
+                HandleServerCommand(__instance.GetComponentInParent<PlayerCharacterController>(), A_1);
                 return false;
             }
         }
